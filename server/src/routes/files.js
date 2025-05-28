@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { auth } = require('../middleware/auth');
-const { uploadFile, getUserFiles, getFileData } = require('../controllers/fileController');
+const { uploadFile, getUserFiles, getFileData, deleteFile } = require('../controllers/fileController');
 const path = require('path');
 
 // Configure multer for file upload
@@ -53,5 +53,6 @@ const uploadMiddleware = (req, res, next) => {
 router.post('/upload', auth, uploadMiddleware, uploadFile);
 router.get('/', auth, getUserFiles);
 router.get('/:id', auth, getFileData);
+router.delete('/:id', auth, deleteFile);
 
 module.exports = router; 

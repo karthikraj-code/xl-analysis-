@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Menu, Transition } from '@headlessui/react';
 import { logout } from '../../store/slices/authSlice';
+import { toast } from 'react-hot-toast';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -11,6 +12,10 @@ const Navbar = () => {
 
   const handleLogout = () => {
     dispatch(logout());
+    toast.success('Signed out successfully!', {
+      duration: 2000,
+      position: 'top-center',
+    });
     navigate('/login');
   };
 

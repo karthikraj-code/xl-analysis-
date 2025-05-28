@@ -166,4 +166,36 @@ exports.getFileData = async (req, res) => {
     console.error('Error fetching file data:', error);
     res.status(500).json({ message: 'Error fetching file data', error: error.message });
   }
+};
+
+exports.deleteFile = async (req, res) => {
+  try {
+    const file = await ExcelFile.findOne({
+      _id: req.params.id,
+      user: req.user._id
+    });
+
+    if (!file) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    // Delete from Cloudinary if path exists
+    if (file.path) {
+      try {
+        const publicId = file.path.split('/').pop().split('.')[0];
+        await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+      } catch (cloudinaryError) {
+        console.error('Error deleting from Cloudinary:', cloudinaryError);
+        // Continue with deletion even if Cloudinary deletion fails
+      }
+    }
+
+    // Delete from database
+    await ExcelFile.deleteOne({ _id: file._id });
+
+    res.json({ message: 'File deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    res.status(500).json({ message: 'Error deleting file', error: error.message });
+  }
 }; 

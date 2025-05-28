@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { Toaster } from 'react-hot-toast';
 import Navbar from './components/layout/Navbar';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
@@ -24,6 +25,7 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
+        <Toaster />
         <Navbar />
         <main className="container mx-auto px-4 py-8">
           <Routes>

@@ -1,12 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { uploadFile } from '../../store/slices/filesSlice';
+import { toast } from 'react-hot-toast';
 
 const FileUpload = () => {
   const dispatch = useDispatch();
-  const { loading, error } = useSelector((state) => state.files);
+  const navigate = useNavigate();
+  const { loading, error, success } = useSelector((state) => state.files);
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState(null);
+
+  useEffect(() => {
+    if (success?.upload) {
+      toast.success('File uploaded successfully!', {
+        duration: 2000,
+        position: 'top-center',
+      });
+      // Navigate to files after a short delay
+      setTimeout(() => {
+        navigate('/files');
+      }, 2000);
+    }
+  }, [success?.upload, navigate]);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -49,7 +65,7 @@ const FileUpload = () => {
       'application/csv'
     ];
     if (!validTypes.includes(file.type)) {
-      alert('Please upload a valid Excel file (.xls, .xlsx) or CSV file (.csv)');
+      toast.error('Please upload a valid Excel file (.xls, .xlsx) or CSV file (.csv)');
       return false;
     }
     return true;

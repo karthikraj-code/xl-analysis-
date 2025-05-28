@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { login, clearError } from '../../store/slices/authSlice';
+import { toast } from 'react-hot-toast';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -15,6 +16,10 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
+      toast.success('Login successful!', {
+        duration: 2000,
+        position: 'top-center',
+      });
       navigate('/dashboard');
     }
     return () => {
