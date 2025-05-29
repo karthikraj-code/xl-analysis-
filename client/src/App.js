@@ -10,6 +10,8 @@ import FileUpload from './components/files/FileUpload';
 import FileList from './components/files/FileList';
 import Analytics from './components/analytics/Analytics';
 import AdminPanel from './components/admin/AdminPanel';
+import AuthCallback from './components/auth/AuthCallback';
+import Profile from './components/profile/Profile';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -36,6 +38,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <Dashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>
+                  <Profile />
                 </PrivateRoute>
               }
             />
@@ -71,6 +81,7 @@ function App() {
                 </AdminRoute>
               }
             />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/" element={<Navigate to="/dashboard" />} />
           </Routes>
         </main>

@@ -1,7 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+// Make sure this matches your backend server URL
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // Async thunks
 export const register = createAsyncThunk(
@@ -45,10 +46,22 @@ export const getProfile = createAsyncThunk(
   }
 );
 
+export const forgotPassword = createAsyncThunk(
+  'auth/forgotPassword',
+  async ({ email, newPassword }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API_URL}/auth/forgot-password`, { email, newPassword });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
 const initialState = {
-  user: null,
   token: localStorage.getItem('token'),
-  isAuthenticated: false,
+  isAuthenticated: !!localStorage.getItem('token'),
+  user: null,
   loading: false,
   error: null
 };
@@ -57,11 +70,30 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    logout: (state) => {
-      localStorage.removeItem('token');
-      state.user = null;
-      state.token = null;
+    loginStart: (state) => {
+      state.loading = true;
+      state.error = null;
+    },
+    loginSuccess: (state, action) => {
+      state.loading = false;
+      state.isAuthenticated = true;
+      state.token = action.payload.token;
+      state.error = null;
+    },
+    loginFailure: (state, action) => {
+      state.loading = false;
       state.isAuthenticated = false;
+      state.token = null;
+      state.error = action.payload;
+    },
+    logout: (state) => {
+      state.isAuthenticated = false;
+      state.token = null;
+      state.user = null;
+      localStorage.removeItem('token');
+    },
+    setUser: (state, action) => {
+      state.user = action.payload;
     },
     clearError: (state) => {
       state.error = null;
@@ -112,9 +144,21 @@ const authSlice = createSlice({
       .addCase(getProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || 'Failed to fetch profile';
+      })
+      // Forgot Password
+      .addCase(forgotPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(forgotPassword.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || 'Password reset failed';
       });
   }
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { loginStart, loginSuccess, loginFailure, logout, setUser, clearError } = authSlice.actions;
 export default authSlice.reducer; 

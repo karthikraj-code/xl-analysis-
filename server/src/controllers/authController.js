@@ -111,4 +111,89 @@ exports.getProfile = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error fetching profile', error: error.message });
   }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    console.log('Forgot password request received:', { email: req.body.email });
+    const { email, newPassword } = req.body;
+
+    // Validate input
+    if (!email || !newPassword) {
+      console.log('Missing required fields:', { email: !!email, newPassword: !!newPassword });
+      return res.status(400).json({ 
+        message: 'Please provide both email and new password',
+        fields: { email: !email, newPassword: !newPassword }
+      });
+    }
+
+    // Validate password length
+    if (newPassword.length < 6) {
+      console.log('Password too short:', newPassword.length);
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      console.log('User not found:', email);
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    console.log('User found, updating password for:', email);
+    
+    // Update user's password
+    user.password = newPassword;
+    await user.save();
+
+    console.log('Password updated successfully for:', email);
+
+    res.json({ 
+      message: 'Password reset successful'
+    });
+  } catch (error) {
+    console.error('Error in forgotPassword:', error);
+    res.status(500).json({ 
+      message: 'Error resetting password', 
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+// Social login success handler
+exports.handleSocialLoginSuccess = (req, res) => {
+  try {
+    if (!req.user) {
+      throw new Error('No user data received from social login');
+    }
+
+    const token = generateToken(req.user._id);
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    
+    console.log('Social login successful for user:', req.user.email);
+    
+    // Include user profile information in the redirect
+    const userData = {
+      id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      profilePicture: req.user.profilePicture,
+      role: req.user.role
+    };
+    
+    // Redirect to the auth callback route with the token and user data
+    res.redirect(`${clientUrl}/auth/callback?token=${token}&user=${encodeURIComponent(JSON.stringify(userData))}`);
+  } catch (error) {
+    console.error('Social login error:', error);
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    res.redirect(`${clientUrl}/auth/callback?message=${encodeURIComponent(error.message)}`);
+  }
+};
+
+// Social login failure handler
+exports.handleSocialLoginFailure = (req, res) => {
+  console.error('Social login failure:', req.query);
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+  const errorMessage = req.query.error || 'Authentication failed';
+  res.redirect(`${clientUrl}/auth/callback?message=${encodeURIComponent(errorMessage)}`);
 }; 

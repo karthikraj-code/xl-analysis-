@@ -1,11 +1,12 @@
+// Load environment variables first
+require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const path = require('path');
-
-// Load environment variables
-dotenv.config();
+const session = require('express-session');
+const passport = require('./config/passport');
 
 // Debug: Log environment variables
 console.log('Environment variables loaded:');
@@ -16,11 +17,32 @@ console.log('PORT:', process.env.PORT || 5000);
 // Create Express app
 const app = express();
 
+// Trust proxy
+app.set('trust proxy', 1);
+
 // CORS configuration
 app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
+  origin: process.env.NODE_ENV === 'production' ? process.env.CLIENT_URL : '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  }
+}));
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Middleware
 app.use(express.json());
