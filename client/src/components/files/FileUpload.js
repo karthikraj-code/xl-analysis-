@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { uploadFile } from '../../store/slices/filesSlice';
 import { toast } from 'react-hot-toast';
+import { FaFileExcel, FaCloudUploadAlt } from 'react-icons/fa';
 
 const FileUpload = () => {
   const dispatch = useDispatch();
@@ -17,7 +18,6 @@ const FileUpload = () => {
         duration: 2000,
         position: 'top-center',
       });
-      // Navigate to files after a short delay
       setTimeout(() => {
         navigate('/files');
       }, 2000);
@@ -79,57 +79,71 @@ const FileUpload = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="card">
-        <h2 className="text-2xl font-bold mb-6">Upload Excel File</h2>
-        
-        <form onSubmit={handleSubmit}>
-          <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center ${
-              dragActive ? 'border-primary-500 bg-primary-50' : 'border-gray-300'
-            }`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-          >
-            <input
-              type="file"
-              accept=".xls,.xlsx,.csv"
-              onChange={handleChange}
-              className="hidden"
-              id="file-upload"
-            />
-            <label
-              htmlFor="file-upload"
-              className="cursor-pointer inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMwMDAiIGZpbGwtb3BhY2l0eT0iLjAyIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIxLTEuNzktNC00LTRzLTQgMS43OS00IDQgMS43OSA0IDQgNCA0LTEuNzkgNC00eiIvPjwvZz48L2c+PC9zdmc+')] opacity-20"></div>
+      <div className="max-w-2xl mx-auto relative z-10">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 transform transition-all duration-300 hover:shadow-2xl">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Upload Excel File</h2>
+            <p className="text-gray-600">Upload your Excel or CSV file for analysis</p>
+          </div>
+          
+          <form onSubmit={handleSubmit}>
+            <div
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
+                dragActive 
+                  ? 'border-blue-500 bg-blue-50/50' 
+                  : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50/50'
+              }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
             >
-              Choose File
-            </label>
-            <p className="mt-2 text-sm text-gray-500">
-              or drag and drop your Excel file here
-            </p>
-            {file && (
-              <p className="mt-2 text-sm text-gray-600">
-                Selected file: {file.name}
-              </p>
+              <div className="flex flex-col items-center">
+                <FaCloudUploadAlt className="h-12 w-12 text-blue-500 mb-4" />
+                <input
+                  type="file"
+                  accept=".xls,.xlsx,.csv"
+                  onChange={handleChange}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="cursor-pointer inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300"
+                >
+                  Choose File
+                </label>
+                <p className="mt-4 text-sm text-gray-500">
+                  or drag and drop your Excel file here
+                </p>
+                {file && (
+                  <div className="mt-4 flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-4 py-2 rounded-lg">
+                    <FaFileExcel className="h-5 w-5 text-green-500" />
+                    <span>{file.name}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {error && (
+              <div className="mt-4 text-red-500 text-sm text-center bg-red-50 p-3 rounded-lg">
+                {error}
+              </div>
             )}
-          </div>
 
-          {error && (
-            <div className="mt-4 text-red-500 text-sm text-center">{error}</div>
-          )}
-
-          <div className="mt-6">
-            <button
-              type="submit"
-              disabled={!file || loading}
-              className="btn btn-primary w-full"
-            >
-              {loading ? 'Uploading...' : 'Upload File'}
-            </button>
-          </div>
-        </form>
+            <div className="mt-6">
+              <button
+                type="submit"
+                disabled={!file || loading}
+                className="w-full flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Uploading...' : 'Upload File'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

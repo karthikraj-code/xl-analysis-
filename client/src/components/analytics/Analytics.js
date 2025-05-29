@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Line, Bar, Pie, Scatter, Doughnut, PolarArea, Radar } from 'react-chartjs-2';
 import { getFileData } from '../../store/slices/filesSlice';
 import { generateInsights } from '../../store/slices/analyticsSlice';
+import { FaDownload } from 'react-icons/fa';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -142,10 +143,9 @@ const Analytics = () => {
 
   useEffect(() => {
     if (fileId) {
-      console.log('Fetching file data for ID:', fileId);
       dispatch(getFileData(fileId));
     }
-  }, [fileId, dispatch]);
+  }, [dispatch, fileId]);
 
   const generateChartData = useCallback(() => {
     if (!currentFile || !xAxis || !yAxis) {
@@ -437,42 +437,63 @@ const Analytics = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-red-500 text-center p-4">
-        {error}
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 flex justify-center items-center">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 text-red-600">
+          <p className="text-xl font-semibold mb-2">Error Loading Analysis</p>
+          <p>{error}</p>
+        </div>
       </div>
     );
   }
 
   if (!currentFile) {
     return (
-      <div className="text-center p-8">
-        <p className="text-gray-500">No file data available.</p>
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 flex justify-center items-center">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 text-gray-600">
+          <p className="text-xl font-semibold">No file data available.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8">Data Analytics</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="card">
-          <h2 className="text-xl font-semibold mb-4">Chart Configuration</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Chart Type</label>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header Section */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-orange-200 shadow-lg">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-gray-800">{currentFile.originalName}</h1>
+            <button
+              onClick={handleDownload}
+              className="relative group inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+            >
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 rounded-lg opacity-50"></span>
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 rounded-lg opacity-0 group-hover:opacity-100 blur transition-all duration-300"></span>
+              <span className="relative flex items-center text-white">
+                <FaDownload className="mr-2 h-4 w-4" />
+                Download Analysis
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Chart Controls */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Chart Type</h2>
+            <div className="space-y-4">
               <select
                 value={chartType}
                 onChange={(e) => setChartType(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                className="w-full bg-white border border-orange-200 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 <option value="line">Line Chart</option>
                 <option value="bar">Bar Chart</option>
@@ -483,88 +504,86 @@ const Analytics = () => {
                 <option value="radar">Radar Chart</option>
               </select>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700">X-Axis</label>
-              <select
-                value={xAxis}
-                onChange={(e) => setXAxis(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              >
-                <option value="">Select X-Axis</option>
-                {currentFile.columns.map((column) => (
-                  <option key={column} value={column}>
-                    {column}
-                  </option>
-                ))}
-              </select>
+          </div>
+
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Axis Selection</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">X-Axis</label>
+                <select
+                  value={xAxis}
+                  onChange={(e) => setXAxis(e.target.value)}
+                  className="w-full bg-white border border-orange-200 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="">Select X-Axis</option>
+                  {currentFile.columns.map((column) => (
+                    <option key={column} value={column}>
+                      {column}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Y-Axis</label>
+                <select
+                  value={yAxis}
+                  onChange={(e) => setYAxis(e.target.value)}
+                  className="w-full bg-white border border-orange-200 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="">Select Y-Axis</option>
+                  {currentFile.columns.map((column) => (
+                    <option key={column} value={column}>
+                      {column}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Y-Axis</label>
-              <select
-                value={yAxis}
-                onChange={(e) => setYAxis(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              >
-                <option value="">Select Y-Axis</option>
-                {currentFile.columns.map((column) => (
-                  <option key={column} value={column}>
-                    {column}
-                  </option>
-                ))}
-              </select>
+          </div>
+
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Data Summary</h2>
+            <div className="space-y-4">
+              <div className="p-4 bg-orange-50 rounded-lg">
+                <p className="text-sm text-gray-600">Total Rows</p>
+                <p className="text-2xl font-bold text-gray-800">{currentFile.data.length}</p>
+              </div>
+              <div className="p-4 bg-orange-50 rounded-lg">
+                <p className="text-sm text-gray-600">Columns</p>
+                <p className="text-lg text-gray-800">{currentFile.columns.join(', ')}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="card">
-          <h2 className="text-xl font-semibold mb-4">Data Summary</h2>
-          <div className="space-y-2">
-            <p>Total Rows: {currentFile.data.length}</p>
-            <p>Columns: {currentFile.columns.join(', ')}</p>
+        {/* Chart Visualization */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">Chart Visualization</h2>
+          <div className="h-96 bg-white rounded-lg p-4">
+            {renderChart()}
           </div>
         </div>
-      </div>
 
-      <div className="card mb-8">
-        <h2 className="text-xl font-semibold mb-4">Chart Visualization</h2>
-        <div className="h-96">
-          {renderChart()}
-        </div>
-        {chartData && (
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={handleDownload}
-              className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 flex items-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-              Download Chart
-            </button>
+        {showInsights && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">AI Analysis</h2>
+            {insightsLoading ? (
+              <div className="flex justify-center items-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+              </div>
+            ) : insights ? (
+              <div className="prose max-w-none text-gray-700">
+                <div className="whitespace-pre-wrap">{insights}</div>
+              </div>
+            ) : (
+              <div className="text-center p-4 text-gray-600">
+                No insights available. Please select axes to generate analysis.
+              </div>
+            )}
           </div>
         )}
       </div>
-
-      {showInsights && (
-        <div className="card">
-          <h2 className="text-xl font-semibold mb-4">AI Analysis</h2>
-          {insightsLoading ? (
-            <div className="flex justify-center items-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
-            </div>
-          ) : insights ? (
-            <div className="prose max-w-none">
-              <div className="whitespace-pre-wrap">{insights}</div>
-            </div>
-          ) : (
-            <div className="text-center p-4 text-gray-500">
-              No insights available. Please select axes to generate analysis.
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };
