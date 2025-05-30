@@ -560,7 +560,7 @@ const Analytics = () => {
         {/* Chart Visualization */}
         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
           <h2 className="text-xl font-semibold text-gray-800 mb-6">Chart Visualization</h2>
-          <div className="h-96 bg-white rounded-lg p-4">
+          <div className="h-96 bg-gradient-to-br from-white to-orange-50 rounded-lg p-4 shadow-inner border border-orange-100">
             {renderChart()}
           </div>
         </div>

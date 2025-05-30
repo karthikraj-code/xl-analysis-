@@ -126,15 +126,23 @@ const Navbar = () => {
               <div className="flex items-center space-x-4">
                 <Link
                   to="/login"
-                  className={`text-gray-500 hover:text-gray-700 text-sm font-medium ${isActive('/login') ? 'text-blue-600' : ''}`}
+                  className={`relative group inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${isActive('/login') ? 'ring-2 ring-blue-300' : ''}`}
                 >
-                  Login
+                  <span className={`absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400 via-pink-400 to-pink-500 rounded-lg ${isActive('/login') ? 'opacity-100' : 'opacity-80'}`}></span>
+                  <span className={`absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500 via-pink-500 to-pink-600 rounded-lg opacity-0 group-hover:opacity-100 blur transition-all duration-300 ${isActive('/login') ? 'opacity-100' : ''}`}></span>
+                  <span className="relative text-white">
+                    Login
+                  </span>
                 </Link>
                 <Link
                   to="/register"
-                  className={`bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 ${isActive('/register') ? 'ring-2 ring-blue-500' : ''}`}
+                  className={`relative group inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${isActive('/register') ? 'ring-2 ring-blue-300' : ''}`}
                 >
-                  Register
+                   <span className={`absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400 via-pink-400 to-pink-500 rounded-lg ${isActive('/register') ? 'opacity-100' : 'opacity-80'}`}></span>
+                  <span className={`absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500 via-pink-500 to-pink-600 rounded-lg opacity-0 group-hover:opacity-100 blur transition-all duration-300 ${isActive('/register') ? 'opacity-100' : ''}`}></span>
+                  <span className="relative text-white">
+                    Register
+                  </span>
                 </Link>
               </div>
             )}
