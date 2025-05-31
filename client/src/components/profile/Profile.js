@@ -42,7 +42,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-100 to-yellow-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-r from-[#eea2a2] via-[#bbc1bf] via-[#57c6e1] via-[#b49fda] to-[#7ac5d8] py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl p-8 border border-orange-200">
           {/* Profile Header */}
