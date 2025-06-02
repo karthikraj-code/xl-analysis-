@@ -35,7 +35,7 @@ const Navbar = () => {
                 <div className="relative">
                   <span className="absolute -inset-1 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 rounded-lg blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></span>
                   <span className="relative inline-block text-2xl font-bold bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 bg-clip-text text-transparent font-mono tracking-wider">
-                    EXCEL ANALYSIS PLATFORM
+                EXCEL ANALYSIS PLATFORM
                   </span>
                 </div>
               </Link>
@@ -131,7 +131,7 @@ const Navbar = () => {
                   <span className={`absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400 via-pink-400 to-pink-500 rounded-lg ${isActive('/login') ? 'opacity-100' : 'opacity-80'}`}></span>
                   <span className={`absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500 via-pink-500 to-pink-600 rounded-lg opacity-0 group-hover:opacity-100 blur transition-all duration-300 ${isActive('/login') ? 'opacity-100' : ''}`}></span>
                   <span className="relative text-white">
-                    Login
+                  Login
                   </span>
                 </Link>
                 <Link
@@ -141,7 +141,7 @@ const Navbar = () => {
                    <span className={`absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400 via-pink-400 to-pink-500 rounded-lg ${isActive('/register') ? 'opacity-100' : 'opacity-80'}`}></span>
                   <span className={`absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500 via-pink-500 to-pink-600 rounded-lg opacity-0 group-hover:opacity-100 blur transition-all duration-300 ${isActive('/register') ? 'opacity-100' : ''}`}></span>
                   <span className="relative text-white">
-                    Register
+                  Register
                   </span>
                 </Link>
               </div>

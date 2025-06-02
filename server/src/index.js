@@ -6,7 +6,6 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
 const passport = require('./config/passport');
 
 // Debug: Log environment variables
@@ -34,11 +33,6 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    ttl: 24 * 60 * 60, // 1 day
-    autoRemove: 'native'
-  }),
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
@@ -86,9 +80,9 @@ mongoose.connect(process.env.MONGODB_URI)
     console.log('Connected to MongoDB');
     // Start server
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, '0.0.0.0', () => {
+    app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
-      console.log(`API available at http://0.0.0.0:${PORT}/api`);
+      console.log(`API available at http://localhost:${PORT}/api`);
     });
   })
   .catch((err) => {
