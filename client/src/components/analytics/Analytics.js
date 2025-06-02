@@ -18,6 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 // Register ChartJS components
 ChartJS.register(
@@ -30,7 +31,8 @@ ChartJS.register(
   RadialLinearScale,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ChartDataLabels
 );
 
 // Color schemes for different chart types
@@ -140,6 +142,309 @@ const Analytics = () => {
   const [chartData, setChartData] = useState(null);
   const [showInsights, setShowInsights] = useState(false);
   const chartRef = useRef(null);
+
+  // Add chart customization options
+  const [chartOptions, setChartOptions] = useState({
+    showLegend: true,
+    showGrid: true,
+    showDataLabels: false,
+    animationDuration: 1000
+  });
+
+  // Base options for all charts
+  const baseOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    plugins: {
+      legend: {
+        display: false,
+      },
+      title: {
+        display: true,
+        text: `${yAxis} vs ${xAxis}`,
+        font: {
+          size: 16,
+          family: "'Inter', sans-serif",
+          weight: 'bold'
+        },
+        padding: {
+          top: 10,
+          bottom: 20
+        }
+      },
+      tooltip: {
+        enabled: true,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        titleColor: '#1f2937',
+        bodyColor: '#4b5563',
+        borderColor: '#e5e7eb',
+        borderWidth: 1,
+        padding: 12,
+        boxPadding: 6,
+        callbacks: {
+          label: function(context) {
+            const value = context.parsed.y !== undefined ? context.parsed.y : context.raw;
+            return new Intl.NumberFormat('en-US', {
+              style: 'decimal',
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            }).format(value);
+          }
+        }
+      },
+      datalabels: {
+        display: false
+      }
+    },
+    animation: {
+      duration: 1000,
+      easing: 'easeInOutQuart'
+    },
+    elements: {
+      point: {
+        radius: 0,
+        hoverRadius: 4,
+        borderWidth: 0
+      },
+      line: {
+        tension: 0.4
+      }
+    }
+  };
+
+  // Update chart specific options
+  const chartSpecificOptions = {
+    line: {
+      ...baseOptions,
+      elements: {
+        point: {
+          radius: 0,
+          hoverRadius: 4,
+          borderWidth: 0
+        },
+        line: {
+          tension: 0.4
+        }
+      },
+      scales: {
+        x: {
+          display: true,
+          grid: {
+            display: false
+          },
+          ticks: {
+            font: {
+              size: 11,
+              family: "'Inter', sans-serif"
+            },
+            padding: 10,
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 8
+          }
+        },
+        y: {
+          display: true,
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)',
+            drawBorder: false
+          },
+          ticks: {
+            font: {
+              size: 11,
+              family: "'Inter', sans-serif"
+            },
+            padding: 10,
+            callback: function(value) {
+              return new Intl.NumberFormat('en-US', {
+                notation: 'compact',
+                maximumFractionDigits: 1
+              }).format(value);
+            }
+          }
+        }
+      }
+    },
+    bar: {
+      ...baseOptions,
+      plugins: {
+        ...baseOptions.plugins,
+        tooltip: {
+          ...baseOptions.plugins.tooltip,
+          callbacks: {
+            label: function(context) {
+              const value = context.parsed.y;
+              return new Intl.NumberFormat('en-US', {
+                style: 'decimal',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              }).format(value);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          display: true,
+          grid: {
+            display: false
+          },
+          ticks: {
+            font: {
+              size: 11,
+              family: "'Inter', sans-serif"
+            },
+            padding: 10,
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 8
+          }
+        },
+        y: {
+          display: true,
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)',
+            drawBorder: false
+          },
+          ticks: {
+            font: {
+              size: 11,
+              family: "'Inter', sans-serif"
+            },
+            padding: 10,
+            callback: function(value) {
+              return new Intl.NumberFormat('en-US', {
+                notation: 'compact',
+                maximumFractionDigits: 1
+              }).format(value);
+            }
+          }
+        }
+      }
+    },
+    scatter: {
+      ...baseOptions,
+      elements: {
+        point: {
+          radius: 3,
+          hoverRadius: 6,
+          borderWidth: 0
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          position: 'bottom',
+          display: true,
+          grid: {
+            display: false
+          },
+          ticks: {
+            font: {
+              size: 11,
+              family: "'Inter', sans-serif"
+            },
+            padding: 10,
+            maxTicksLimit: 8
+          }
+        },
+        y: {
+          type: 'linear',
+          display: true,
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)',
+            drawBorder: false
+          },
+          ticks: {
+            font: {
+              size: 11,
+              family: "'Inter', sans-serif"
+            },
+            padding: 10,
+            maxTicksLimit: 8
+          }
+        }
+      }
+    },
+    pie: {
+      ...baseOptions,
+      plugins: {
+        ...baseOptions.plugins,
+        tooltip: {
+          ...baseOptions.plugins.tooltip,
+          callbacks: {
+            label: function(context) {
+              const value = context.raw || 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((value / total) * 100).toFixed(1);
+              return `${percentage}%`;
+            }
+          }
+        }
+      }
+    },
+    doughnut: {
+      ...baseOptions,
+      cutout: '60%',
+      plugins: {
+        ...baseOptions.plugins,
+        tooltip: {
+          ...baseOptions.plugins.tooltip,
+          callbacks: {
+            label: function(context) {
+              const value = context.raw || 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((value / total) * 100).toFixed(1);
+              return `${percentage}%`;
+            }
+          }
+        }
+      }
+    },
+    polarArea: {
+      ...baseOptions,
+      plugins: {
+        ...baseOptions.plugins,
+        tooltip: {
+          ...baseOptions.plugins.tooltip,
+          callbacks: {
+            label: function(context) {
+              return new Intl.NumberFormat('en-US').format(context.raw || 0);
+            }
+          }
+        }
+      }
+    },
+    radar: {
+      ...baseOptions,
+      scales: {
+        r: {
+          angleLines: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.1)'
+          },
+          grid: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.1)'
+          },
+          pointLabels: {
+            display: true,
+            font: {
+              size: 11,
+              family: "'Inter', sans-serif"
+            }
+          },
+          ticks: {
+            display: true
+          }
+        }
+      }
+    }
+  };
 
   useEffect(() => {
     if (fileId) {
@@ -271,6 +576,74 @@ const Analytics = () => {
     }
   };
 
+  const handleChartOptionChange = (option, value) => {
+    setChartOptions(prev => ({
+      ...prev,
+      [option]: value
+    }));
+  };
+
+  // Update the chart options based on customization
+  const getUpdatedChartOptions = (type) => {
+    const options = JSON.parse(JSON.stringify(chartSpecificOptions[type] || baseOptions));
+    
+    // Update legend visibility
+    if (options.plugins) {
+      options.plugins.legend = {
+        ...options.plugins.legend,
+        display: chartOptions.showLegend
+      };
+    }
+    
+    // Update grid visibility
+    if (options.scales) {
+      if (options.scales.x) {
+        options.scales.x = {
+          ...options.scales.x,
+          grid: {
+            display: chartOptions.showGrid
+          }
+        };
+      }
+      if (options.scales.y) {
+        options.scales.y = {
+          ...options.scales.y,
+          grid: {
+            display: chartOptions.showGrid
+          }
+        };
+      }
+    }
+    
+    // Update animation duration
+    if (options.animation) {
+      options.animation = {
+        ...options.animation,
+        duration: chartOptions.animationDuration
+      };
+    }
+    
+    // Update data labels
+    if (chartOptions.showDataLabels) {
+      options.plugins.datalabels = {
+        display: true,
+        color: '#4b5563',
+        font: {
+          size: 11,
+          family: "'Inter', sans-serif"
+        },
+        formatter: (value) => {
+          return new Intl.NumberFormat('en-US', {
+            notation: 'compact',
+            maximumFractionDigits: 1
+          }).format(value);
+        }
+      };
+    }
+    
+    return options;
+  };
+
   const renderChart = () => {
     if (!chartData) {
       return (
@@ -280,139 +653,10 @@ const Analytics = () => {
       );
     }
 
-    // Base options for all charts
-    const baseOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'top',
-        },
-        title: {
-          display: true,
-          text: `${yAxis} vs ${xAxis}`,
-        },
-      },
-    };
-
-    // Specific options for different chart types
-    const chartSpecificOptions = {
-      line: {
-        ...baseOptions,
-        scales: {
-          x: {
-            grid: {
-              color: 'rgba(0, 0, 0, 0.1)'
-            }
-          },
-          y: {
-            grid: {
-              color: 'rgba(0, 0, 0, 0.1)'
-            }
-          }
-        }
-      },
-      bar: {
-        ...baseOptions,
-        scales: {
-          x: {
-            grid: {
-              color: 'rgba(0, 0, 0, 0.1)'
-            }
-          },
-          y: {
-            grid: {
-              color: 'rgba(0, 0, 0, 0.1)'
-            }
-          }
-        }
-      },
-      scatter: {
-        ...baseOptions,
-        scales: {
-          x: {
-            type: 'linear',
-            position: 'bottom',
-            grid: {
-              color: 'rgba(0, 0, 0, 0.1)'
-            }
-          },
-          y: {
-            type: 'linear',
-            grid: {
-              color: 'rgba(0, 0, 0, 0.1)'
-            }
-          }
-        }
-      },
-      pie: {
-        ...baseOptions,
-        plugins: {
-          ...baseOptions.plugins,
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const label = context.label || '';
-                const value = context.raw || 0;
-                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                const percentage = ((value / total) * 100).toFixed(1);
-                return `${label}: ${value} (${percentage}%)`;
-              }
-            }
-          }
-        }
-      },
-      doughnut: {
-        ...baseOptions,
-        plugins: {
-          ...baseOptions.plugins,
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const label = context.label || '';
-                const value = context.raw || 0;
-                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                const percentage = ((value / total) * 100).toFixed(1);
-                return `${label}: ${value} (${percentage}%)`;
-              }
-            }
-          }
-        }
-      },
-      polarArea: {
-        ...baseOptions,
-        plugins: {
-          ...baseOptions.plugins,
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const label = context.label || '';
-                const value = context.raw || 0;
-                return `${label}: ${value}`;
-              }
-            }
-          }
-        }
-      },
-      radar: {
-        ...baseOptions,
-        scales: {
-          r: {
-            angleLines: {
-              color: 'rgba(0, 0, 0, 0.1)'
-            },
-            grid: {
-              color: 'rgba(0, 0, 0, 0.1)'
-            }
-          }
-        }
-      }
-    };
-
     const chartProps = {
       ref: chartRef,
       data: chartData,
-      options: chartSpecificOptions[chartType] || baseOptions
+      options: getUpdatedChartOptions(chartType)
     };
 
     switch (chartType) {
@@ -553,6 +797,57 @@ const Analytics = () => {
                 <p className="text-sm text-gray-600">Columns</p>
                 <p className="text-lg text-gray-800">{currentFile.columns.join(', ')}</p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart Customization */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg mb-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Chart Customization</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="showLegend"
+                checked={chartOptions.showLegend}
+                onChange={(e) => handleChartOptionChange('showLegend', e.target.checked)}
+                className="form-checkbox h-4 w-4 text-orange-500"
+              />
+              <label htmlFor="showLegend" className="text-sm text-gray-700">Show Legend</label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="showGrid"
+                checked={chartOptions.showGrid}
+                onChange={(e) => handleChartOptionChange('showGrid', e.target.checked)}
+                className="form-checkbox h-4 w-4 text-orange-500"
+              />
+              <label htmlFor="showGrid" className="text-sm text-gray-700">Show Grid</label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="showDataLabels"
+                checked={chartOptions.showDataLabels}
+                onChange={(e) => handleChartOptionChange('showDataLabels', e.target.checked)}
+                className="form-checkbox h-4 w-4 text-orange-500"
+              />
+              <label htmlFor="showDataLabels" className="text-sm text-gray-700">Show Data Labels</label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <label htmlFor="animationDuration" className="text-sm text-gray-700">Animation Duration:</label>
+              <select
+                id="animationDuration"
+                value={chartOptions.animationDuration}
+                onChange={(e) => handleChartOptionChange('animationDuration', parseInt(e.target.value))}
+                className="form-select text-sm border-gray-300 rounded-md"
+              >
+                <option value="0">None</option>
+                <option value="500">Fast</option>
+                <option value="1000">Normal</option>
+                <option value="2000">Slow</option>
+              </select>
             </div>
           </div>
         </div>
