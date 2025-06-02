@@ -80,9 +80,9 @@ mongoose.connect(process.env.MONGODB_URI)
     console.log('Connected to MongoDB');
     // Start server
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server is running on port ${PORT}`);
-      console.log(`API available at http://localhost:${PORT}/api`);
+      console.log(`API available at http://0.0.0.0:${PORT}/api`);
     });
   })
   .catch((err) => {
