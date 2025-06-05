@@ -5,6 +5,8 @@ import { Line, Bar, Pie, Scatter, Doughnut, PolarArea, Radar } from 'react-chart
 import { getFileData } from '../../store/slices/filesSlice';
 import { generateInsights } from '../../store/slices/analyticsSlice';
 import { FaDownload } from 'react-icons/fa';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -142,6 +144,8 @@ const Analytics = () => {
   const [chartData, setChartData] = useState(null);
   const [showInsights, setShowInsights] = useState(false);
   const chartRef = useRef(null);
+  const chartContainerRef = useRef(null);
+  const insightsContainerRef = useRef(null);
 
   // Add chart customization options
   const [chartOptions, setChartOptions] = useState({
@@ -576,6 +580,78 @@ const Analytics = () => {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    if (!xAxis || !yAxis) {
+      alert('Please select both X and Y axes before downloading the analysis');
+      return;
+    }
+
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 20;
+      let yOffset = margin;
+
+      // Add title
+      pdf.setFontSize(20);
+      pdf.text('Excel Data Analysis Report', pageWidth / 2, yOffset, { align: 'center' });
+      yOffset += 15;
+
+      // Add file information
+      pdf.setFontSize(12);
+      pdf.text(`Excel File: ${currentFile.name}`, margin, yOffset);
+      yOffset += 10;
+      pdf.text(`Analysis Date: ${new Date().toLocaleDateString()}`, margin, yOffset);
+      yOffset += 15;
+
+      // Add chart configuration
+      pdf.setFontSize(14);
+      pdf.text('Excel Chart Configuration', margin, yOffset);
+      yOffset += 10;
+      pdf.setFontSize(12);
+      pdf.text(`Chart Type: ${chartType}`, margin, yOffset);
+      yOffset += 7;
+      pdf.text(`X-Axis: ${xAxis}`, margin, yOffset);
+      yOffset += 7;
+      pdf.text(`Y-Axis: ${yAxis}`, margin, yOffset);
+      yOffset += 15;
+
+      // Add chart visualization
+      if (chartContainerRef.current) {
+        const chartCanvas = await html2canvas(chartContainerRef.current);
+        const chartImgData = chartCanvas.toDataURL('image/png');
+        const chartWidth = pageWidth - (2 * margin);
+        const chartHeight = (chartCanvas.height * chartWidth) / chartCanvas.width;
+        
+        pdf.addPage();
+        pdf.text('Excel Chart Visualization', margin, margin);
+        pdf.addImage(chartImgData, 'PNG', margin, margin + 10, chartWidth, chartHeight);
+        yOffset = margin + chartHeight + 20;
+      }
+
+      // Add AI Insights
+      if (insights && insightsContainerRef.current) {
+        pdf.addPage();
+        pdf.setFontSize(14);
+        pdf.text('Excel AI Analysis Insights', margin, margin);
+        yOffset = margin + 10;
+
+        const insightsCanvas = await html2canvas(insightsContainerRef.current);
+        const insightsImgData = insightsCanvas.toDataURL('image/png');
+        const insightsWidth = pageWidth - (2 * margin);
+        const insightsHeight = (insightsCanvas.height * insightsWidth) / insightsCanvas.width;
+
+        pdf.addImage(insightsImgData, 'PNG', margin, yOffset, insightsWidth, insightsHeight);
+      }
+
+      // Save the PDF
+      pdf.save(`excel-analysis-report-${Date.now()}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF report: ' + error.message);
+    }
+  };
+
   const handleChartOptionChange = (option, value) => {
     setChartOptions(prev => ({
       ...prev,
@@ -723,7 +799,7 @@ const Analytics = () => {
               <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 rounded-lg opacity-0 group-hover:opacity-100 blur transition-all duration-300"></span>
               <span className="relative flex items-center text-white">
                 <FaDownload className="mr-2 h-4 w-4" />
-                Download Analysis
+                Download  generated Chart
               </span>
             </button>
           </div>
@@ -853,7 +929,7 @@ const Analytics = () => {
         </div>
 
         {/* Chart Visualization */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
+        <div ref={chartContainerRef} className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
           <h2 className="text-xl font-semibold text-gray-800 mb-6">Chart Visualization</h2>
           <div className="h-96 bg-gradient-to-br from-white to-orange-50 rounded-lg p-4 shadow-inner border border-orange-100">
             {renderChart()}
@@ -861,7 +937,7 @@ const Analytics = () => {
         </div>
 
         {showInsights && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
+          <div ref={insightsContainerRef} className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">AI Analysis</h2>
             {insightsLoading ? (
               <div className="flex justify-center items-center h-32">
@@ -878,6 +954,17 @@ const Analytics = () => {
             )}
           </div>
         )}
+
+        {/* Add download PDF button */}
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={handleDownloadPDF}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+          >
+            <FaDownload className="mr-2 h-4 w-4" />
+            Download Excel Analysis Report
+          </button>
+        </div>
       </div>
     </div>
   );
