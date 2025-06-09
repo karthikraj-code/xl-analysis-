@@ -21,6 +21,7 @@ import {
   Legend
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import ChartRecommendationBot from './ChartRecommendationBot';
 
 // Register ChartJS components
 ChartJS.register(
@@ -599,7 +600,7 @@ const Analytics = () => {
 
       // Add file information
       pdf.setFontSize(12);
-      pdf.text(`Excel File: ${currentFile.name}`, margin, yOffset);
+      pdf.text(`Excel File: ${currentFile.originalName}`, margin, yOffset);
       yOffset += 10;
       pdf.text(`Analysis Date: ${new Date().toLocaleDateString()}`, margin, yOffset);
       yOffset += 15;
@@ -624,9 +625,13 @@ const Analytics = () => {
         const chartHeight = (chartCanvas.height * chartWidth) / chartCanvas.width;
         
         pdf.addPage();
-        pdf.text('Excel Chart Visualization', margin, margin);
-        pdf.addImage(chartImgData, 'PNG', margin, margin + 10, chartWidth, chartHeight);
-        yOffset = margin + chartHeight + 20;
+        pdf.setFontSize(16);
+        const chartTitle = 'Excel Chart Visualization';
+        const chartTitleWidth = pdf.getStringUnitWidth(chartTitle) * 16 / pdf.internal.scaleFactor;
+        const chartTitleX = (pageWidth - chartTitleWidth) / 2;
+        pdf.text(chartTitle, chartTitleX, margin + 10);
+        pdf.addImage(chartImgData, 'PNG', margin, margin + 20, chartWidth, chartHeight);
+        yOffset = margin + chartHeight + 30;
       }
 
       // Add AI Insights
@@ -926,6 +931,15 @@ const Analytics = () => {
               </select>
             </div>
           </div>
+        </div>
+
+        {/* Chart Recommendation Bot */}
+        <div className="mb-6">
+          <ChartRecommendationBot
+            xAxis={xAxis}
+            yAxis={yAxis}
+            data={currentFile?.data}
+          />
         </div>
 
         {/* Chart Visualization */}
