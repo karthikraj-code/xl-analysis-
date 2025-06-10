@@ -22,6 +22,9 @@ import {
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import ChartRecommendationBot from './ChartRecommendationBot';
+import ThreeDChart from './ThreeDChart';
+import ThreeDPieChart from './ThreeDPieChart';
+import ThreeDScatterPlot from './ThreeDScatterPlot';
 
 // Register ChartJS components
 ChartJS.register(
@@ -155,6 +158,9 @@ const Analytics = () => {
     showDataLabels: false,
     animationDuration: 1000
   });
+
+  // Add state for chart dimension
+  const [chartDimension, setChartDimension] = useState('2d');
 
   // Base options for all charts
   const baseOptions = {
@@ -542,20 +548,24 @@ const Analytics = () => {
     }
 
     try {
-      // Get the chart instance
-      const chart = chartRef.current;
-      if (!chart) {
-        throw new Error('Chart not found');
+      // Get the chart instance from the ref
+      const chartInstance = chartRef.current;
+      if (!chartInstance || !chartInstance.canvas) {
+        console.error('Chart instance or canvas not found:', chartInstance);
+        throw new Error('Chart not found. Please ensure the chart is properly rendered.');
       }
 
       // Get the canvas element
-      const canvas = chart.canvas;
+      const canvas = chartInstance.canvas;
+      if (!canvas) {
+        throw new Error('Canvas element not found');
+      }
       
-      // Create a temporary canvas with white background
+      // Create a temporary canvas with white background and willReadFrequently attribute
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = canvas.width;
       tempCanvas.height = canvas.height;
-      const tempCtx = tempCanvas.getContext('2d');
+      const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
       
       // Fill with white background
       tempCtx.fillStyle = 'white';
@@ -564,19 +574,54 @@ const Analytics = () => {
       // Draw the chart on top
       tempCtx.drawImage(canvas, 0, 0);
       
-      // Convert to blob
-      tempCanvas.toBlob((blob) => {
-        // Create download link
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `chart-${Date.now()}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      }, 'image/png');
+      // For scatter plots, ensure we're capturing the entire chart area
+      if (chartType === 'scatter') {
+        // Add padding to ensure all points are visible
+        const padding = 20;
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = tempCanvas.width + (padding * 2);
+        finalCanvas.height = tempCanvas.height + (padding * 2);
+        const finalCtx = finalCanvas.getContext('2d', { willReadFrequently: true });
+        
+        // Fill with white background
+        finalCtx.fillStyle = 'white';
+        finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+        
+        // Draw the chart with padding
+        finalCtx.drawImage(tempCanvas, padding, padding);
+        
+        // Use the final canvas for the download
+        finalCanvas.toBlob((blob) => {
+          if (!blob) {
+            throw new Error('Failed to create image blob');
+          }
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `scatter-plot-${Date.now()}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        }, 'image/png', 1.0);
+      } else {
+        // For other chart types, use the original tempCanvas
+        tempCanvas.toBlob((blob) => {
+          if (!blob) {
+            throw new Error('Failed to create image blob');
+          }
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `chart-${Date.now()}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        }, 'image/png', 1.0);
+      }
     } catch (error) {
+      console.error('Error downloading chart:', error);
       alert('Error downloading chart: ' + error.message);
     }
   };
@@ -726,10 +771,19 @@ const Analytics = () => {
   };
 
   const renderChart = () => {
-    if (!chartData) {
+    if (!chartData || !chartData.datasets) {
       return (
-        <div className="text-center p-8">
-          <p className="text-gray-500">Select X and Y axes to view the chart</p>
+        <div className="w-full h-full flex items-center justify-center bg-gray-50 rounded-lg">
+          <p className="text-gray-500">No data available</p>
+        </div>
+      );
+    }
+
+    // For scatter plots, we don't need labels
+    if (chartType !== 'scatter' && !chartData.labels) {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-gray-50 rounded-lg">
+          <p className="text-gray-500">No data available</p>
         </div>
       );
     }
@@ -748,15 +802,88 @@ const Analytics = () => {
       case 'pie':
         return <Pie {...chartProps} />;
       case 'scatter':
-        return <Scatter {...chartProps} />;
+        // Use the already properly formatted scatter data
+        const scatterData = {
+          datasets: [{
+            ...chartData.datasets[0],
+            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1,
+            pointRadius: 6,
+            pointHoverRadius: 8
+          }]
+        };
+
+        const scatterOptions = {
+          ...getUpdatedChartOptions('scatter'),
+          scales: {
+            x: {
+              type: 'linear',
+              position: 'bottom',
+              title: {
+                display: true,
+                text: xAxis
+              }
+            },
+            y: {
+              type: 'linear',
+              title: {
+                display: true,
+                text: yAxis
+              }
+            }
+          },
+          plugins: {
+            ...getUpdatedChartOptions('scatter').plugins,
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `(${context.parsed.x.toFixed(2)}, ${context.parsed.y.toFixed(2)})`;
+                }
+              }
+            }
+          }
+        };
+
+        return <Scatter ref={chartRef} data={scatterData} options={scatterOptions} />;
       case 'doughnut':
         return <Doughnut {...chartProps} />;
       case 'polarArea':
         return <PolarArea {...chartProps} />;
       case 'radar':
         return <Radar {...chartProps} />;
+      case '3d-bar':
+        return (
+          <div className="w-full h-full">
+            <ThreeDChart data={chartData} />
+          </div>
+        );
+      case '3d-pie':
+        return (
+          <div className="w-full h-full">
+            <ThreeDPieChart data={chartData} />
+          </div>
+        );
+      case '3d-scatter':
+        // Format data for 3D scatter plot
+        const scatter3DData = chartData.datasets[0].data.map((value, index) => ({
+          x: value,
+          y: chartData.datasets[1]?.data[index] || 0,
+          z: chartData.datasets[2]?.data[index] || 0,
+          label: chartData.labels[index]
+        }));
+
+        return (
+          <div className="w-full h-full">
+            <ThreeDScatterPlot data={scatter3DData} />
+          </div>
+        );
       default:
-        return null;
+        return (
+          <div className="w-full h-full flex items-center justify-center bg-gray-50 rounded-lg">
+            <p className="text-gray-500">Select a chart type</p>
+          </div>
+        );
     }
   };
 
@@ -815,19 +942,68 @@ const Analytics = () => {
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Chart Type</h2>
             <div className="space-y-4">
-              <select
-                value={chartType}
-                onChange={(e) => setChartType(e.target.value)}
-                className="w-full bg-white border border-orange-200 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                <option value="line">Line Chart</option>
-                <option value="bar">Bar Chart</option>
-                <option value="pie">Pie Chart</option>
-                <option value="scatter">Scatter Plot</option>
-                <option value="doughnut">Doughnut Chart</option>
-                <option value="polarArea">Polar Area Chart</option>
-                <option value="radar">Radar Chart</option>
-              </select>
+              {/* Chart Dimension Selection */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Chart Dimension</label>
+                <div className="flex space-x-4">
+                  <button
+                    onClick={() => {
+                      setChartDimension('2d');
+                      setChartType('line'); // Reset to default 2D chart
+                    }}
+                    className={`flex-1 py-2 px-4 rounded-lg border ${
+                      chartDimension === '2d'
+                        ? 'bg-orange-500 text-white border-orange-500'
+                        : 'bg-white text-gray-700 border-orange-200 hover:bg-orange-50'
+                    }`}
+                  >
+                    2D Charts
+                  </button>
+                  <button
+                    onClick={() => {
+                      setChartDimension('3d');
+                      setChartType('3d-bar'); // Reset to default 3D chart
+                    }}
+                    className={`flex-1 py-2 px-4 rounded-lg border ${
+                      chartDimension === '3d'
+                        ? 'bg-orange-500 text-white border-orange-500'
+                        : 'bg-white text-gray-700 border-orange-200 hover:bg-orange-50'
+                    }`}
+                  >
+                    3D Charts
+                  </button>
+                </div>
+              </div>
+
+              {/* Chart Type Selection */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  {chartDimension === '2d' ? '2D Chart Type' : '3D Chart Type'}
+                </label>
+                <select
+                  value={chartType}
+                  onChange={(e) => setChartType(e.target.value)}
+                  className="w-full bg-white border border-orange-200 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  {chartDimension === '2d' ? (
+                    <>
+                      <option value="line">Line Chart</option>
+                      <option value="bar">Bar Chart</option>
+                      <option value="pie">Pie Chart</option>
+                      <option value="scatter">Scatter Plot</option>
+                      <option value="doughnut">Doughnut Chart</option>
+                      <option value="polarArea">Polar Area Chart</option>
+                      <option value="radar">Radar Chart</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="3d-bar">3D Bar Chart</option>
+                      <option value="3d-pie">3D Pie Chart</option>
+                      <option value="3d-scatter">3D Scatter Plot</option>
+                    </>
+                  )}
+                </select>
+              </div>
             </div>
           </div>
 
