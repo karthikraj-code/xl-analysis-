@@ -1,88 +1,101 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { FaUpload, FaFile, FaTrash, FaDownload } from 'react-icons/fa';
-import { uploadFile, getFiles, deleteFile } from '../../store/slices/fileSlice';
+import { Link } from 'react-router-dom';
+import { FaUpload, FaFile, FaTrash, FaChartBar } from 'react-icons/fa';
+import { uploadFile, getUserFiles, deleteFile } from '../../store/slices/filesSlice';
+import { toast } from 'react-hot-toast';
 
 const Files = () => {
   const dispatch = useDispatch();
   const { files, loading, error } = useSelector((state) => state.files);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
-    dispatch(getFiles());
+    dispatch(getUserFiles());
   }, [dispatch]);
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      setSelectedFile(file);
       dispatch(uploadFile(file));
       setShowUploadModal(false);
+      toast.success('File uploaded successfully!');
     }
   };
 
   const handleDeleteFile = (fileId) => {
     if (window.confirm('Are you sure you want to delete this file?')) {
       dispatch(deleteFile(fileId));
+      toast.success('File deleted successfully!');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#ddd6f3] to-[#faaca8] py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header Section */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-orange-200 shadow-lg">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-800">My Files</h1>
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Files List */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+            <h2 className="text-lg font-semibold text-gray-900">My Files</h2>
             <button
               onClick={() => setShowUploadModal(true)}
               className="relative group inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
             >
-              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 rounded-lg opacity-50"></span>
-              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 rounded-lg opacity-0 group-hover:opacity-100 blur transition-all duration-300"></span>
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 rounded-lg opacity-50"></span>
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 rounded-lg opacity-0 group-hover:opacity-100 blur transition-all duration-300"></span>
               <span className="relative flex items-center text-white">
                 <FaUpload className="mr-2 h-4 w-4" />
                 Upload File
               </span>
             </button>
           </div>
-        </div>
-
-        {/* Files List */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-orange-200 shadow-lg">
+          
           {loading ? (
             <div className="flex justify-center items-center h-32">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div>
             </div>
           ) : error ? (
-            <div className="text-red-500 text-center">{error}</div>
+            <div className="text-red-500 text-center p-4">{error}</div>
           ) : files.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">No files uploaded yet</div>
+            <div className="text-center py-8">
+              <p className="text-gray-600">No files uploaded yet.</p>
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="mt-4 inline-flex items-center text-blue-600 hover:text-blue-700"
+              >
+                Upload your first file
+              </button>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="divide-y divide-gray-100">
               {files.map((file) => (
-                <div key={file._id} className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
-                  <div className="flex items-center space-x-3">
-                    <FaFile className="text-orange-500 text-xl" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
-                      <p className="text-xs text-gray-500">{new Date(file.uploadedAt).toLocaleDateString()}</p>
+                <div key={file._id} className="flex items-center justify-between p-6 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <FaFile className="w-6 h-6 text-blue-600" />
                     </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => window.open(file.url, '_blank')}
-                        className="text-gray-600 hover:text-orange-500 transition-colors"
-                      >
-                        <FaDownload />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteFile(file._id)}
-                        className="text-gray-600 hover:text-red-500 transition-colors"
-                      >
-                        <FaTrash />
-                      </button>
+                    <div>
+                      <p className="text-lg font-medium text-gray-900">{file.originalName || file.name}</p>
+                      <p className="text-sm text-gray-500">
+                        Uploaded on {new Date(file.uploadedAt).toLocaleDateString()}
+                      </p>
                     </div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <Link
+                      to={`/analytics/${file._id}`}
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                    >
+                      <FaChartBar className="w-4 h-4 mr-2" />
+                      View Analysis
+                    </Link>
+                    <button
+                      onClick={() => handleDeleteFile(file._id)}
+                      className="p-2 text-gray-600 hover:text-red-600 transition-colors rounded-lg hover:bg-red-50"
+                      title="Delete file"
+                    >
+                      <FaTrash className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -94,20 +107,32 @@ const Files = () => {
       {/* Upload Modal */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
             <h2 className="text-xl font-semibold mb-4">Upload File</h2>
-            <input
-              type="file"
-              onChange={handleFileUpload}
-              className="w-full p-2 border rounded"
-            />
-            <div className="mt-4 flex justify-end space-x-2">
-              <button
-                onClick={() => setShowUploadModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
+            <div className="space-y-4">
+              <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                <input
+                  type="file"
+                  onChange={handleFileUpload}
+                  className="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100"
+                />
+                <p className="mt-2 text-sm text-gray-500">
+                  Supported formats: .xls, .xlsx, .csv
+                </p>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setShowUploadModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

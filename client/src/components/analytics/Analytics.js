@@ -889,15 +889,15 @@ const Analytics = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 flex justify-center items-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500"></div>
+      <div className="min-h-screen bg-white flex justify-center items-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 flex justify-center items-center">
+      <div className="min-h-screen bg-white flex justify-center items-center">
         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 text-red-600">
           <p className="text-xl font-semibold mb-2">Error Loading Analysis</p>
           <p>{error}</p>
@@ -908,7 +908,7 @@ const Analytics = () => {
 
   if (!currentFile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 flex justify-center items-center">
+      <div className="min-h-screen bg-white flex justify-center items-center">
         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 text-gray-600">
           <p className="text-xl font-semibold">No file data available.</p>
         </div>
@@ -917,18 +917,18 @@ const Analytics = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header Section */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-orange-200 shadow-lg">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-blue-200 shadow-lg">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-800">{currentFile.originalName}</h1>
             <button
               onClick={handleDownload}
               className="relative group inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
             >
-              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 rounded-lg opacity-50"></span>
-              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 rounded-lg opacity-0 group-hover:opacity-100 blur transition-all duration-300"></span>
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500 via-sky-500 to-blue-600 rounded-lg opacity-50"></span>
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-600 via-sky-600 to-blue-700 rounded-lg opacity-0 group-hover:opacity-100 blur transition-all duration-300"></span>
               <span className="relative flex items-center text-white">
                 <FaDownload className="mr-2 h-4 w-4" />
                 Download  generated Chart
@@ -939,7 +939,7 @@ const Analytics = () => {
 
         {/* Chart Controls */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-blue-200 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Chart Type</h2>
             <div className="space-y-4">
               {/* Chart Dimension Selection */}
@@ -953,8 +953,8 @@ const Analytics = () => {
                     }}
                     className={`flex-1 py-2 px-4 rounded-lg border ${
                       chartDimension === '2d'
-                        ? 'bg-orange-500 text-white border-orange-500'
-                        : 'bg-white text-gray-700 border-orange-200 hover:bg-orange-50'
+                        ? 'bg-blue-500 text-white border-blue-500'
+                        : 'bg-white text-gray-700 border-blue-200 hover:bg-blue-50'
                     }`}
                   >
                     2D Charts
@@ -966,8 +966,8 @@ const Analytics = () => {
                     }}
                     className={`flex-1 py-2 px-4 rounded-lg border ${
                       chartDimension === '3d'
-                        ? 'bg-orange-500 text-white border-orange-500'
-                        : 'bg-white text-gray-700 border-orange-200 hover:bg-orange-50'
+                        ? 'bg-blue-500 text-white border-blue-500'
+                        : 'bg-white text-gray-700 border-blue-200 hover:bg-blue-50'
                     }`}
                   >
                     3D Charts
@@ -983,7 +983,7 @@ const Analytics = () => {
                 <select
                   value={chartType}
                   onChange={(e) => setChartType(e.target.value)}
-                  className="w-full bg-white border border-orange-200 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full bg-white border border-blue-200 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {chartDimension === '2d' ? (
                     <>
@@ -1007,7 +1007,7 @@ const Analytics = () => {
             </div>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-blue-200 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Axis Selection</h2>
             <div className="space-y-4">
               <div>
@@ -1015,7 +1015,7 @@ const Analytics = () => {
                 <select
                   value={xAxis}
                   onChange={(e) => setXAxis(e.target.value)}
-                  className="w-full bg-white border border-orange-200 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full bg-white border border-blue-200 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select X-Axis</option>
                   {currentFile.columns.map((column) => (
@@ -1030,7 +1030,7 @@ const Analytics = () => {
                 <select
                   value={yAxis}
                   onChange={(e) => setYAxis(e.target.value)}
-                  className="w-full bg-white border border-orange-200 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full bg-white border border-blue-200 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select Y-Axis</option>
                   {currentFile.columns.map((column) => (
@@ -1043,14 +1043,14 @@ const Analytics = () => {
             </div>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-blue-200 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Data Summary</h2>
             <div className="space-y-4">
-              <div className="p-4 bg-orange-50 rounded-lg">
+              <div className="p-4 bg-blue-50 rounded-lg">
                 <p className="text-sm text-gray-600">Total Rows</p>
                 <p className="text-2xl font-bold text-gray-800">{currentFile.data.length}</p>
               </div>
-              <div className="p-4 bg-orange-50 rounded-lg">
+              <div className="p-4 bg-blue-50 rounded-lg">
                 <p className="text-sm text-gray-600">Columns</p>
                 <p className="text-lg text-gray-800">{currentFile.columns.join(', ')}</p>
               </div>
@@ -1059,7 +1059,7 @@ const Analytics = () => {
         </div>
 
         {/* Chart Customization */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg mb-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-blue-200 shadow-lg mb-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Chart Customization</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="flex items-center space-x-2">
@@ -1068,7 +1068,7 @@ const Analytics = () => {
                 id="showLegend"
                 checked={chartOptions.showLegend}
                 onChange={(e) => handleChartOptionChange('showLegend', e.target.checked)}
-                className="form-checkbox h-4 w-4 text-orange-500"
+                className="form-checkbox h-4 w-4 text-blue-500"
               />
               <label htmlFor="showLegend" className="text-sm text-gray-700">Show Legend</label>
             </div>
@@ -1078,7 +1078,7 @@ const Analytics = () => {
                 id="showGrid"
                 checked={chartOptions.showGrid}
                 onChange={(e) => handleChartOptionChange('showGrid', e.target.checked)}
-                className="form-checkbox h-4 w-4 text-orange-500"
+                className="form-checkbox h-4 w-4 text-blue-500"
               />
               <label htmlFor="showGrid" className="text-sm text-gray-700">Show Grid</label>
             </div>
@@ -1088,7 +1088,7 @@ const Analytics = () => {
                 id="showDataLabels"
                 checked={chartOptions.showDataLabels}
                 onChange={(e) => handleChartOptionChange('showDataLabels', e.target.checked)}
-                className="form-checkbox h-4 w-4 text-orange-500"
+                className="form-checkbox h-4 w-4 text-blue-500"
               />
               <label htmlFor="showDataLabels" className="text-sm text-gray-700">Show Data Labels</label>
             </div>
@@ -1119,19 +1119,19 @@ const Analytics = () => {
         </div>
 
         {/* Chart Visualization */}
-        <div ref={chartContainerRef} className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
+        <div ref={chartContainerRef} className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-blue-200 shadow-lg">
           <h2 className="text-xl font-semibold text-gray-800 mb-6">Chart Visualization</h2>
-          <div className="h-96 bg-gradient-to-br from-white to-orange-50 rounded-lg p-4 shadow-inner border border-orange-100">
+          <div className="h-96 bg-gradient-to-br from-white to-blue-50 rounded-lg p-4 shadow-inner border border-blue-100">
             {renderChart()}
           </div>
         </div>
 
         {showInsights && (
-          <div ref={insightsContainerRef} className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-200 shadow-lg">
+          <div ref={insightsContainerRef} className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-blue-200 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">AI Analysis</h2>
             {insightsLoading ? (
               <div className="flex justify-center items-center h-32">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
               </div>
             ) : insights ? (
               <div className="prose max-w-none text-gray-700">
@@ -1149,7 +1149,7 @@ const Analytics = () => {
         <div className="mt-6 flex justify-end">
           <button
             onClick={handleDownloadPDF}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-purple-500 via-pink-500 to-pink-500 hover:from-purple-600 hover:via-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
           >
             <FaDownload className="mr-2 h-4 w-4" />
             Download Excel Analysis Report
