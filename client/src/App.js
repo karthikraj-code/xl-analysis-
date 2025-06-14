@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
 import Navbar from './components/layout/Navbar';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
@@ -29,28 +31,63 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const publicPaths = ['/login', '/register'];
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [ref, inView] = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
 
   // If it's a login or register page, don't add the sidebar
   if (publicPaths.includes(location.pathname)) {
-    return <div className="min-h-screen bg-gray-50">{children}</div>;
+    return (
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="min-h-screen bg-gray-50"
+      >
+        {children}
+      </motion.div>
+    );
   }
 
   // For all other pages (including landing page), add the sidebar
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
-      <div className="flex justify-center items-center py-4 bg-white shadow-sm">
-        <Link to="/" className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
+      <motion.div 
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="flex justify-center items-center py-4 bg-white shadow-sm"
+      >
+        <Link 
+          to="/" 
+          className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-all duration-300 hover:scale-105"
+        >
           EXCEL ANALYTICS PLATFORM
         </Link>
-      </div>
-      <main 
-        className={`transition-all duration-300 ease-in-out p-8 ${
+      </motion.div>
+      <motion.main 
+        ref={ref}
+        initial={{ x: -20, opacity: 0 }}
+        animate={inView ? { x: 0, opacity: 1 } : { x: -20, opacity: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className={`transition-all duration-500 ease-in-out p-8 ${
           isSidebarOpen ? 'ml-64' : 'ml-0'
         }`}
       >
-        {children}
-      </main>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
+      </motion.main>
     </div>
   );
 };

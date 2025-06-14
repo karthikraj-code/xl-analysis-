@@ -1,128 +1,250 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Sphere } from '@react-three/drei';
 
-const FeatureCard = ({ icon, title, description }) => (
-  <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-    <div className="text-primary text-3xl mb-4">{icon}</div>
-    <h3 className="text-xl font-semibold text-neutral-dark mb-2">{title}</h3>
-    <p className="text-neutral">{description}</p>
-  </div>
-);
+const FeatureCard = ({ icon, title, description, index }) => {
+  const [ref, inView] = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 50 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+      transition={{ duration: 0.5, delay: index * 0.2 }}
+      whileHover={{ scale: 1.05 }}
+      className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+    >
+      <motion.div 
+        className="text-primary text-3xl mb-4"
+        animate={{ rotate: [0, 10, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        {icon}
+      </motion.div>
+      <h3 className="text-xl font-semibold text-neutral-dark mb-2">{title}</h3>
+      <p className="text-neutral">{description}</p>
+    </motion.div>
+  );
+};
+
+const AnimatedSphere = () => {
+  return (
+    <Canvas style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.3 }}>
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[2, 1, 1]} />
+      <Sphere args={[1, 64, 64]} scale={2}>
+        <meshStandardMaterial
+          color="#4F46E5"
+          wireframe
+          transparent
+          opacity={0.2}
+        />
+      </Sphere>
+      <OrbitControls 
+        enableZoom={false} 
+        autoRotate 
+        autoRotateSpeed={0.5}
+        enablePan={false}
+        minPolarAngle={Math.PI / 2}
+        maxPolarAngle={Math.PI / 2}
+      />
+    </Canvas>
+  );
+};
 
 const LandingPage = () => {
+  const { scrollYProgress } = useScroll();
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8]);
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
-      <section className="py-20 px-4 md:px-8">
-        <div className="max-w-content mx-auto">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-5xl font-bold text-primary mb-6">
+      <section className="py-20 px-4 md:px-8 relative overflow-hidden">
+        <motion.div 
+          style={{ opacity, scale }}
+          className="absolute inset-0 z-0"
+        >
+          <AnimatedSphere />
+        </motion.div>
+        <div className="max-w-content mx-auto relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <h1 className="text-4xl md:text-6xl font-bold text-primary mb-6">
               Transform Your Excel Data into Actionable Insights
             </h1>
             <p className="text-xl text-neutral max-w-2xl mx-auto mb-8">
               Powerful analytics and visualization tools to help you make data-driven decisions with confidence.
             </p>
-            <div className="flex gap-4 justify-center">
-              <Link
-                to="/dashboard"
-                className="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-300"
+            <motion.div 
+              className="flex gap-4 justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Start Analyzing
-              </Link>
-              <Link
-                to="/demo"
-                className="bg-white hover:bg-gray-50 text-primary border-2 border-primary px-8 py-3 rounded-lg font-semibold transition-colors duration-300"
+                <Link
+                  to="/dashboard"
+                  className="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
+                  Start Analyzing
+                </Link>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Request Demo
-              </Link>
-            </div>
-          </div>
+                <Link
+                  to="/demo"
+                  className="bg-white hover:bg-gray-50 text-primary border-2 border-primary px-8 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
+                  Request Demo
+                </Link>
+              </motion.div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-16 px-4 md:px-8 bg-white">
+      <section className="py-16 px-4 md:px-8 bg-white relative z-10 shadow-lg">
         <div className="max-w-content mx-auto">
-          <h2 className="text-3xl font-bold text-center text-neutral-dark mb-12">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="text-3xl font-bold text-center text-neutral-dark mb-12"
+          >
             Powerful Features for Data Analysis
-          </h2>
+          </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <FeatureCard
               icon="📊"
               title="Advanced Analytics"
               description="Unlock powerful insights with our advanced analytics engine and customizable dashboards."
+              index={0}
             />
             <FeatureCard
               icon="🔍"
               title="Smart Detection"
               description="Automatically detect patterns and anomalies in your data with AI-powered analysis."
+              index={1}
             />
             <FeatureCard
               icon="📈"
               title="Real-time Updates"
               description="Stay current with real-time data updates and instant visualization changes."
+              index={2}
             />
           </div>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 px-4 md:px-8 bg-primary text-white">
+      <section className="py-16 px-4 md:px-8 bg-primary text-white relative z-10 shadow-lg">
         <div className="max-w-content mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold mb-2">98%</div>
-              <div className="text-lg">Customer Satisfaction</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold mb-2">10K+</div>
-              <div className="text-lg">Active Users</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold mb-2">24/7</div>
-              <div className="text-lg">Support Available</div>
-            </div>
+            {[
+              { value: "98%", label: "Customer Satisfaction" },
+              { value: "10K+", label: "Active Users" },
+              { value: "24/7", label: "Support Available" }
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.1 }}
+                className="bg-white/10 p-6 rounded-lg"
+              >
+                <div className="text-4xl font-bold mb-2">{stat.value}</div>
+                <div className="text-lg">{stat.label}</div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-neutral-dark text-white py-12 px-4 md:px-8">
+      <footer className="bg-neutral-dark text-white py-12 px-4 md:px-8 relative z-10 shadow-lg">
         <div className="max-w-content mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-xl font-semibold mb-4">About Us</h3>
-              <p className="text-gray-300">
-                We're dedicated to making data analysis accessible and powerful for businesses of all sizes.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold mb-4">Quick Links</h3>
-              <ul className="space-y-2">
-                <li><Link to="/features" className="text-gray-300 hover:text-white">Features</Link></li>
-                <li><Link to="/pricing" className="text-gray-300 hover:text-white">Pricing</Link></li>
-                <li><Link to="/docs" className="text-gray-300 hover:text-white">Documentation</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold mb-4">Support</h3>
-              <ul className="space-y-2">
-                <li><Link to="/contact" className="text-gray-300 hover:text-white">Contact Us</Link></li>
-                <li><Link to="/faq" className="text-gray-300 hover:text-white">FAQ</Link></li>
-                <li><Link to="/support" className="text-gray-300 hover:text-white">Help Center</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2">
-                <li><Link to="/privacy" className="text-gray-300 hover:text-white">Privacy Policy</Link></li>
-                <li><Link to="/terms" className="text-gray-300 hover:text-white">Terms of Service</Link></li>
-              </ul>
-            </div>
+            {[
+              {
+                title: "About Us",
+                content: (
+                  <p className="text-gray-300">
+                    We're dedicated to making data analysis accessible and powerful for businesses of all sizes.
+                  </p>
+                )
+              },
+              {
+                title: "Quick Links",
+                content: (
+                  <ul className="space-y-2">
+                    <li><Link to="/features" className="text-gray-300 hover:text-white transition-colors duration-300">Features</Link></li>
+                    <li><Link to="/pricing" className="text-gray-300 hover:text-white transition-colors duration-300">Pricing</Link></li>
+                    <li><Link to="/docs" className="text-gray-300 hover:text-white transition-colors duration-300">Documentation</Link></li>
+                  </ul>
+                )
+              },
+              {
+                title: "Support",
+                content: (
+                  <ul className="space-y-2">
+                    <li><Link to="/contact" className="text-gray-300 hover:text-white transition-colors duration-300">Contact Us</Link></li>
+                    <li><Link to="/faq" className="text-gray-300 hover:text-white transition-colors duration-300">FAQ</Link></li>
+                    <li><Link to="/support" className="text-gray-300 hover:text-white transition-colors duration-300">Help Center</Link></li>
+                  </ul>
+                )
+              },
+              {
+                title: "Legal",
+                content: (
+                  <ul className="space-y-2">
+                    <li><Link to="/privacy" className="text-gray-300 hover:text-white transition-colors duration-300">Privacy Policy</Link></li>
+                    <li><Link to="/terms" className="text-gray-300 hover:text-white transition-colors duration-300">Terms of Service</Link></li>
+                  </ul>
+                )
+              }
+            ].map((section, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="bg-white/5 p-6 rounded-lg"
+              >
+                <h3 className="text-xl font-semibold mb-4">{section.title}</h3>
+                {section.content}
+              </motion.div>
+            ))}
           </div>
-          <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300"
+          >
             <p>&copy; {new Date().getFullYear()} Excel Analysis. All rights reserved.</p>
-          </div>
+          </motion.div>
         </div>
       </footer>
     </div>
