@@ -72,26 +72,30 @@ const Navbar = ({ isOpen, onToggle }) => {
           {isAuthenticated ? (
             <>
               <Link
-                to="/dashboard"
-                className={getNavLinkClasses('/dashboard')}
+                to={user?.role === 'admin' ? '/admin/dashboard' : '/dashboard'}
+                className={getNavLinkClasses(user?.role === 'admin' ? '/admin/dashboard' : '/dashboard')}
               >
-                <FaChartLine className={`text-xl ${location.pathname === '/dashboard' ? 'text-white' : 'text-blue-500'}`} />
+                <FaChartLine className={`text-xl ${location.pathname === (user?.role === 'admin' ? '/admin/dashboard' : '/dashboard') ? 'text-white' : 'text-blue-500'}`} />
                 {isOpen && <span className="ml-3 font-medium">Dashboard</span>}
               </Link>
-              <Link
-                to="/upload"
-                className={getNavLinkClasses('/upload')}
-              >
-                <FaUpload className={`text-xl ${location.pathname === '/upload' ? 'text-white' : 'text-blue-500'}`} />
-                {isOpen && <span className="ml-3 font-medium">Upload</span>}
-              </Link>
-              <Link
-                to="/files"
-                className={getNavLinkClasses('/files')}
-              >
-                <FaFileAlt className={`text-xl ${location.pathname === '/files' ? 'text-white' : 'text-blue-500'}`} />
-                {isOpen && <span className="ml-3 font-medium">Files</span>}
-              </Link>
+              {user?.role !== 'admin' && (
+                <>
+                  <Link
+                    to="/upload"
+                    className={getNavLinkClasses('/upload')}
+                  >
+                    <FaUpload className={`text-xl ${location.pathname === '/upload' ? 'text-white' : 'text-blue-500'}`} />
+                    {isOpen && <span className="ml-3 font-medium">Upload</span>}
+                  </Link>
+                  <Link
+                    to="/files"
+                    className={getNavLinkClasses('/files')}
+                  >
+                    <FaFileAlt className={`text-xl ${location.pathname === '/files' ? 'text-white' : 'text-blue-500'}`} />
+                    {isOpen && <span className="ml-3 font-medium">Files</span>}
+                  </Link>
+                </>
+              )}
               <Link
                 to="/profile"
                 className={getNavLinkClasses('/profile')}
@@ -99,15 +103,6 @@ const Navbar = ({ isOpen, onToggle }) => {
                 <FaUser className={`text-xl ${location.pathname === '/profile' ? 'text-white' : 'text-blue-500'}`} />
                 {isOpen && <span className="ml-3 font-medium">Profile</span>}
               </Link>
-              {user?.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  className={getNavLinkClasses('/admin')}
-                >
-                  <FaChartLine className={`text-xl ${location.pathname === '/admin' ? 'text-white' : 'text-blue-500'}`} />
-                  {isOpen && <span className="ml-3 font-medium">Admin</span>}
-                </Link>
-              )}
             </>
           ) : (
             <>

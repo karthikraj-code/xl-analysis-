@@ -8,7 +8,9 @@ const {
   getProfile, 
   forgotPassword,
   handleSocialLoginSuccess,
-  handleSocialLoginFailure
+  handleSocialLoginFailure,
+  registerAdmin,
+  loginAdmin
 } = require('../controllers/authController');
 
 // Public routes
@@ -52,6 +54,10 @@ router.get('/github/callback',
     handleSocialLoginFailure(req, res);
   }
 );
+
+// Admin registration and login
+router.post('/admin/register', registerAdmin);
+router.post('/admin/login', loginAdmin);
 
 // Protected routes
 router.get('/profile', auth, getProfile);

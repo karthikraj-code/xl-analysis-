@@ -433,6 +433,10 @@ const Login = () => {
                   </Link>
                 </p>
               </div>
+
+              <div className="mt-4 text-center">
+                <Link to="/admin/login" className="text-blue-600 hover:underline">Login as Admin?</Link>
+              </div>
             </motion.form>
           ) : (
             <motion.form 

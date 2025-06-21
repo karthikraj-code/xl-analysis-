@@ -463,6 +463,7 @@ const Analytics = () => {
     }
   }, [dispatch, fileId]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const generateChartData = useCallback(() => {
     if (!currentFile || !xAxis || !yAxis) {
       console.log('Missing data for chart:', { currentFile, xAxis, yAxis });

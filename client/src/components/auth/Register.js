@@ -403,6 +403,10 @@ const Register = () => {
                 </Link>
               </motion.p>
             </div>
+
+            <div className="mt-4 text-center">
+              <Link to="/admin/register" className="text-blue-600 hover:underline">Register as Admin?</Link>
+            </div>
           </motion.form>
         </motion.div>
       </div>

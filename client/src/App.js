@@ -15,6 +15,10 @@ import AdminPanel from './components/admin/AdminPanel';
 import AuthCallback from './components/auth/AuthCallback';
 import Profile from './components/profile/Profile';
 import LandingPage from './components/LandingPage';
+import AdminLogin from './components/auth/AdminLogin';
+import AdminRegister from './components/auth/AdminRegister';
+import AdminDashboard from './components/admin/AdminDashboard';
+import UserFiles from './components/admin/UserFiles';
 import './App.css';
 
 const PrivateRoute = ({ children }) => {
@@ -151,7 +155,25 @@ function App() {
               </AdminRoute>
             }
           />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/user/:userId/files"
+            element={
+              <AdminRoute>
+                <UserFiles />
+              </AdminRoute>
+            }
+          />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/admin/login" element={isAuthenticated ? <Navigate to="/admin/dashboard" /> : <AdminLogin />} />
+          <Route path="/admin/register" element={isAuthenticated ? <Navigate to="/admin/dashboard" /> : <AdminRegister />} />
         </Routes>
       </Layout>
     </Router>
