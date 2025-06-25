@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Text, Grid } from '@react-three/drei';
+import React, { useMemo, forwardRef, useImperativeHandle } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
+import { OrbitControls, Text, Grid, Box } from '@react-three/drei';
 import * as THREE from 'three';
 
 const Bar3D = React.memo(({ position, height, color, label, value }) => {
@@ -45,38 +45,61 @@ const AxisLabel = ({ position, text, rotation = [0, 0, 0] }) => {
   );
 };
 
-const ThreeDChart = ({ data }) => {
+const ThreeDChart = forwardRef(({ data }, ref) => {
+  const canvasRef = React.useRef();
+  const [cameraAngle, setCameraAngle] = React.useState('front');
+  const cameraPositions = {
+    front: [8, 8, 8],
+    side: [8, 8, -8],
+    top: [0, 16, 0],
+  };
+
   // Memoize the bars array to prevent unnecessary recalculations
   const bars = useMemo(() => {
-    if (!data || !data.datasets || !data.labels || !Array.isArray(data.datasets[0]?.data)) {
+    if (!data || !Array.isArray(data)) {
       return [];
     }
-
-    const values = data.datasets[0].data;
-    const labels = data.labels;
-    const maxValue = Math.max(...values);
-    const scale = 5 / maxValue;
-
-    return values.map((value, index) => {
-      const height = value * scale;
-      const x = (index - values.length / 2) * 0.8;
-      const color = new THREE.Color().setHSL(index / values.length, 0.8, 0.5);
-
+    // Filter for valid numeric x, y, z
+    const validData = data.filter(d =>
+      d && typeof d.x === 'number' && !isNaN(d.x) &&
+      typeof d.y === 'number' && !isNaN(d.y) &&
+      typeof d.z === 'number' && !isNaN(d.z)
+    );
+    if (validData.length === 0) return [];
+    const xValues = validData.map(d => d.x);
+    const yValues = validData.map(d => d.y);
+    const zValues = validData.map(d => d.z);
+    const maxY = Math.max(...yValues);
+    const scale = 5 / (maxY || 1);
+    return validData.map((d, index) => {
+      const height = d.y * scale;
+      const x = ((d.x - Math.min(...xValues)) / ((Math.max(...xValues) - Math.min(...xValues)) || 1)) * 8 - 4;
+      const z = ((d.z - Math.min(...zValues)) / ((Math.max(...zValues) - Math.min(...zValues)) || 1)) * 8 - 4;
+      const color = new THREE.Color().setHSL(index / validData.length, 0.8, 0.5);
       return {
-        position: [x, height / 2, 0],
+        position: [x, height / 2, z],
         height,
         color,
-        label: labels[index],
-        value: value.toFixed(1)
+        label: d.label,
+        value: d.y.toFixed(1)
       };
     });
   }, [data]);
 
+  useImperativeHandle(ref, () => ({
+    getCanvas: () => canvasRef.current && canvasRef.current.gl && canvasRef.current.gl.domElement,
+    setCameraAngle: (angle) => setCameraAngle(angle),
+    captureImage: () => {
+      const canvas = canvasRef.current && canvasRef.current.gl && canvasRef.current.gl.domElement;
+      return canvas ? canvas.toDataURL('image/png') : null;
+    }
+  }));
+
   // Validate data
-  if (!data || !data.datasets || !data.labels || !Array.isArray(data.datasets[0]?.data)) {
+  if (!data || !Array.isArray(data) || bars.length === 0) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-50 rounded-lg">
-        <p className="text-gray-500">No data available for 3D Chart</p>
+        <p className="text-gray-500">No valid data for 3D Bar Chart. Please select numeric columns for X, Y, and Z axes.</p>
       </div>
     );
   }
@@ -84,10 +107,11 @@ const ThreeDChart = ({ data }) => {
   return (
     <div className="w-full h-full">
       <Canvas
-        camera={{ position: [5, 5, 5], fov: 75 }}
+        ref={canvasRef}
+        camera={{ position: cameraPositions[cameraAngle] || cameraPositions.front, fov: 60 }}
         shadows
-        dpr={[1, 2]} // Optimize for different screen densities
-        performance={{ min: 0.5 }} // Allow frame rate to drop to maintain performance
+        dpr={[1, 2]}
+        performance={{ min: 0.5 }}
       >
         <color attach="background" args={['#f8fafc']} />
         <ambientLight intensity={0.5} />
@@ -98,13 +122,18 @@ const ThreeDChart = ({ data }) => {
           shadow-mapSize-width={1024}
           shadow-mapSize-height={1024}
         />
-        
-        {/* Grid and Axes */}
+
+        {/* 3D Box for reference */}
+        <Box args={[10, 5, 10]} position={[0, 2.5/2, 0]}>
+          <meshStandardMaterial attach="material" color="#e5e7eb" transparent opacity={0.08} />
+        </Box>
+
+        {/* XZ Grid (bottom) */}
         <Grid
           args={[10, 10]}
-          position={[0, -0.1, 0]}
-          cellSize={1}
-          cellThickness={0.5}
+          position={[0, 0, 0]}
+          cellSize={0.5}
+          cellThickness={0.3}
           cellColor="#6b7280"
           sectionSize={1}
           sectionThickness={1}
@@ -112,8 +141,60 @@ const ThreeDChart = ({ data }) => {
           fadeDistance={30}
           fadeStrength={1}
           followCamera={false}
-          infiniteGrid={true}
+          infiniteGrid={false}
         />
+        {/* XY Grid (front) */}
+        <Grid
+          args={[10, 5]}
+          position={[0, 2.5/2, 5/2]}
+          rotation={[Math.PI / 2, 0, 0]}
+          cellSize={0.5}
+          cellThickness={0.3}
+          cellColor="#6b7280"
+          sectionSize={1}
+          sectionThickness={1}
+          sectionColor="#9ca3af"
+          fadeDistance={30}
+          fadeStrength={1}
+          followCamera={false}
+          infiniteGrid={false}
+        />
+        {/* YZ Grid (side) */}
+        <Grid
+          args={[10, 5]}
+          position={[5/2, 2.5/2, 0]}
+          rotation={[0, 0, Math.PI / 2]}
+          cellSize={0.5}
+          cellThickness={0.3}
+          cellColor="#6b7280"
+          sectionSize={1}
+          sectionThickness={1}
+          sectionColor="#9ca3af"
+          fadeDistance={30}
+          fadeStrength={1}
+          followCamera={false}
+          infiniteGrid={false}
+        />
+
+        {/* Axis lines */}
+        {/* X axis (red) */}
+        <mesh>
+          <cylinderGeometry args={[0.03, 0.03, 10, 16]} />
+          <meshStandardMaterial color="#ef4444" />
+          <group position={[0, 0, 0]} rotation={[0, 0, Math.PI / 2]} />
+        </mesh>
+        {/* Y axis (green) */}
+        <mesh>
+          <cylinderGeometry args={[0.03, 0.03, 5, 16]} />
+          <meshStandardMaterial color="#22c55e" />
+          <group position={[0, 0, 0]} />
+        </mesh>
+        {/* Z axis (blue) */}
+        <mesh>
+          <cylinderGeometry args={[0.03, 0.03, 10, 16]} />
+          <meshStandardMaterial color="#3b82f6" />
+          <group position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]} />
+        </mesh>
 
         {/* Axis Labels */}
         <AxisLabel position={[0, -0.5, 0]} text="X Axis" />
@@ -139,6 +220,6 @@ const ThreeDChart = ({ data }) => {
       </Canvas>
     </div>
   );
-};
+});
 
 export default React.memo(ThreeDChart); 

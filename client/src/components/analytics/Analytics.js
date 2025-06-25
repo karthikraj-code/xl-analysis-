@@ -25,6 +25,8 @@ import ChartRecommendationBot from './ChartRecommendationBot';
 import ThreeDChart from './ThreeDChart';
 import ThreeDPieChart from './ThreeDPieChart';
 import ThreeDScatterPlot from './ThreeDScatterPlot';
+import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 // Register ChartJS components
 ChartJS.register(
@@ -145,11 +147,15 @@ const Analytics = () => {
   const [chartType, setChartType] = useState('line');
   const [xAxis, setXAxis] = useState('');
   const [yAxis, setYAxis] = useState('');
+  const [zAxis, setZAxis] = useState('');
   const [chartData, setChartData] = useState(null);
   const [showInsights, setShowInsights] = useState(false);
   const chartRef = useRef(null);
   const chartContainerRef = useRef(null);
   const insightsContainerRef = useRef(null);
+  const threeDChartRef = useRef();
+  const threeDPieRef = useRef();
+  const threeDScatterRef = useRef();
 
   // Add chart customization options
   const [chartOptions, setChartOptions] = useState({
@@ -465,12 +471,12 @@ const Analytics = () => {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const generateChartData = useCallback(() => {
-    if (!currentFile || !xAxis || !yAxis) {
-      console.log('Missing data for chart:', { currentFile, xAxis, yAxis });
+    if (!currentFile || !xAxis || !yAxis || (chartType === '3d-scatter' && !zAxis)) {
+      console.log('Missing data for chart:', { currentFile, xAxis, yAxis, zAxis });
       return;
     }
     
-    console.log('Generating chart data:', { currentFile, xAxis, yAxis });
+    console.log('Generating chart data:', { currentFile, xAxis, yAxis, zAxis });
     
     const labels = currentFile.data.map(row => row[xAxis]);
     const data = currentFile.data.map(row => {
@@ -533,21 +539,68 @@ const Analytics = () => {
       });
     }
 
+    // For 3D scatter plots, we need x, y, and z coordinates
+    if (chartType === '3d-scatter') {
+      setChartData({
+        datasets: [
+          {
+            label: `${zAxis} vs ${yAxis} vs ${xAxis}`,
+            data: currentFile.data.map(row => ({
+              x: parseFloat(row[xAxis]),
+              y: parseFloat(row[yAxis]),
+              z: parseFloat(row[zAxis]),
+              label: row[xAxis] || ''
+            })),
+          },
+        ],
+        labels: currentFile.data.map(row => row[xAxis]),
+      });
+    }
+
+    // For 3D Bar and Pie charts
+    if (['3d-bar', '3d-pie'].includes(chartType)) {
+      setChartData({
+        datasets: [
+          {
+            label: `${zAxis} vs ${yAxis} vs ${xAxis}`,
+            data: currentFile.data.map(row => ({
+              x: parseFloat(row[xAxis]),
+              y: parseFloat(row[yAxis]),
+              z: parseFloat(row[zAxis]),
+              label: row[xAxis] || ''
+            })),
+          },
+        ],
+        labels: currentFile.data.map(row => row[xAxis]),
+      });
+    }
+
     // After setting chart data, generate insights
     dispatch(generateInsights(fileId));
     setShowInsights(true);
-  }, [currentFile, xAxis, yAxis, chartType, dispatch, fileId]);
+  }, [currentFile, xAxis, yAxis, zAxis, chartType, dispatch, fileId]);
 
   useEffect(() => {
     generateChartData();
   }, [generateChartData]);
+
+  useEffect(() => {
+    if (!chartType) return;
+    const token = localStorage.getItem('token');
+    axios.post('/api/analytics/track-chart-usage', { chartType }, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).catch(() => {});
+  }, [chartType]);
 
   const handleDownload = async () => {
     if (!xAxis || !yAxis) {
       alert('Please select both X and Y axes before downloading the chart');
       return;
     }
-
+    if (["3d-bar", "3d-pie", "3d-scatter"].includes(chartType)) {
+      toast.error('Currently, there is no option for downloading 3D charts as PNG.');
+      return;
+    }
     try {
       // Get the chart instance from the ref
       const chartInstance = chartRef.current;
@@ -555,43 +608,29 @@ const Analytics = () => {
         console.error('Chart instance or canvas not found:', chartInstance);
         throw new Error('Chart not found. Please ensure the chart is properly rendered.');
       }
-
       // Get the canvas element
       const canvas = chartInstance.canvas;
       if (!canvas) {
         throw new Error('Canvas element not found');
       }
-      
       // Create a temporary canvas with white background and willReadFrequently attribute
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = canvas.width;
       tempCanvas.height = canvas.height;
       const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
-      
-      // Fill with white background
       tempCtx.fillStyle = 'white';
       tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-      
-      // Draw the chart on top
       tempCtx.drawImage(canvas, 0, 0);
-      
       // For scatter plots, ensure we're capturing the entire chart area
       if (chartType === 'scatter') {
-        // Add padding to ensure all points are visible
         const padding = 20;
         const finalCanvas = document.createElement('canvas');
         finalCanvas.width = tempCanvas.width + (padding * 2);
         finalCanvas.height = tempCanvas.height + (padding * 2);
         const finalCtx = finalCanvas.getContext('2d', { willReadFrequently: true });
-        
-        // Fill with white background
         finalCtx.fillStyle = 'white';
         finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-        
-        // Draw the chart with padding
         finalCtx.drawImage(tempCanvas, padding, padding);
-        
-        // Use the final canvas for the download
         finalCanvas.toBlob((blob) => {
           if (!blob) {
             throw new Error('Failed to create image blob');
@@ -606,7 +645,6 @@ const Analytics = () => {
           window.URL.revokeObjectURL(url);
         }, 'image/png', 1.0);
       } else {
-        // For other chart types, use the original tempCanvas
         tempCanvas.toBlob((blob) => {
           if (!blob) {
             throw new Error('Failed to create image blob');
@@ -632,25 +670,21 @@ const Analytics = () => {
       alert('Please select both X and Y axes before downloading the analysis');
       return;
     }
-
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const margin = 20;
       let yOffset = margin;
-
       // Add title
       pdf.setFontSize(20);
       pdf.text('Excel Data Analysis Report', pageWidth / 2, yOffset, { align: 'center' });
       yOffset += 15;
-
       // Add file information
       pdf.setFontSize(12);
       pdf.text(`Excel File: ${currentFile.originalName}`, margin, yOffset);
       yOffset += 10;
       pdf.text(`Analysis Date: ${new Date().toLocaleDateString()}`, margin, yOffset);
       yOffset += 15;
-
       // Add chart configuration
       pdf.setFontSize(14);
       pdf.text('Excel Chart Configuration', margin, yOffset);
@@ -662,14 +696,39 @@ const Analytics = () => {
       yOffset += 7;
       pdf.text(`Y-Axis: ${yAxis}`, margin, yOffset);
       yOffset += 15;
-
-      // Add chart visualization
-      if (chartContainerRef.current) {
+      // 3D chart: capture multiple angles
+      if (["3d-bar", "3d-pie", "3d-scatter"].includes(chartType)) {
+        const angles = [
+          { key: 'front', label: 'Front View' },
+          { key: 'side', label: 'Side View' },
+          { key: 'top', label: 'Top View' }
+        ];
+        let chartRef = null;
+        if (chartType === '3d-bar') chartRef = threeDChartRef;
+        if (chartType === '3d-pie') chartRef = threeDPieRef;
+        if (chartType === '3d-scatter') chartRef = threeDScatterRef;
+        for (const angle of angles) {
+          if (chartRef && chartRef.current && chartRef.current.setCameraAngle) {
+            chartRef.current.setCameraAngle(angle.key);
+            // Wait for the camera to update and render
+            await new Promise(res => setTimeout(res, 500));
+            const imgData = chartRef.current.captureImage();
+            if (imgData) {
+              pdf.addPage();
+              pdf.setFontSize(16);
+              pdf.text(`${angle.label}`, margin, margin + 10);
+              const chartWidth = pageWidth - (2 * margin);
+              const chartHeight = chartWidth * 0.6;
+              pdf.addImage(imgData, 'PNG', margin, margin + 20, chartWidth, chartHeight);
+            }
+          }
+        }
+      } else if (chartContainerRef.current) {
+        // 2D chart fallback
         const chartCanvas = await html2canvas(chartContainerRef.current);
         const chartImgData = chartCanvas.toDataURL('image/png');
         const chartWidth = pageWidth - (2 * margin);
         const chartHeight = (chartCanvas.height * chartWidth) / chartCanvas.width;
-        
         pdf.addPage();
         pdf.setFontSize(16);
         const chartTitle = 'Excel Chart Visualization';
@@ -679,22 +738,18 @@ const Analytics = () => {
         pdf.addImage(chartImgData, 'PNG', margin, margin + 20, chartWidth, chartHeight);
         yOffset = margin + chartHeight + 30;
       }
-
       // Add AI Insights
       if (insights && insightsContainerRef.current) {
         pdf.addPage();
         pdf.setFontSize(14);
         pdf.text('Excel AI Analysis Insights', margin, margin);
         yOffset = margin + 10;
-
         const insightsCanvas = await html2canvas(insightsContainerRef.current);
         const insightsImgData = insightsCanvas.toDataURL('image/png');
         const insightsWidth = pageWidth - (2 * margin);
         const insightsHeight = (insightsCanvas.height * insightsWidth) / insightsCanvas.width;
-
         pdf.addImage(insightsImgData, 'PNG', margin, yOffset, insightsWidth, insightsHeight);
       }
-
       // Save the PDF
       pdf.save(`excel-analysis-report-${Date.now()}.pdf`);
     } catch (error) {
@@ -856,27 +911,19 @@ const Analytics = () => {
       case '3d-bar':
         return (
           <div className="w-full h-full">
-            <ThreeDChart data={chartData} />
+            {zAxis ? <ThreeDChart ref={threeDChartRef} data={chartData.datasets[0].data} /> : <div className="text-gray-500">Select Z-Axis for 3D Bar Chart</div>}
           </div>
         );
       case '3d-pie':
         return (
           <div className="w-full h-full">
-            <ThreeDPieChart data={chartData} />
+            {zAxis ? <ThreeDPieChart ref={threeDPieRef} data={chartData.datasets[0].data} /> : <div className="text-gray-500">Select Z-Axis for 3D Pie Chart</div>}
           </div>
         );
       case '3d-scatter':
-        // Format data for 3D scatter plot
-        const scatter3DData = chartData.datasets[0].data.map((value, index) => ({
-          x: value,
-          y: chartData.datasets[1]?.data[index] || 0,
-          z: chartData.datasets[2]?.data[index] || 0,
-          label: chartData.labels[index]
-        }));
-
         return (
           <div className="w-full h-full">
-            <ThreeDScatterPlot data={scatter3DData} />
+            <ThreeDScatterPlot ref={threeDScatterRef} data={chartData.datasets[0].data} />
           </div>
         );
       default:
@@ -1041,6 +1088,23 @@ const Analytics = () => {
                   ))}
                 </select>
               </div>
+              {['3d-bar', '3d-pie', '3d-scatter'].includes(chartType) && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Z-Axis</label>
+                  <select
+                    value={zAxis}
+                    onChange={(e) => setZAxis(e.target.value)}
+                    className="w-full bg-white border border-blue-200 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select Z-Axis</option>
+                    {currentFile.columns.map((column) => (
+                      <option key={column} value={column}>
+                        {column}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 

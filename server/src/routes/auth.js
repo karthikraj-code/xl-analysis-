@@ -12,6 +12,8 @@ const {
   registerAdmin,
   loginAdmin
 } = require('../controllers/authController');
+const multer = require('multer');
+const path = require('path');
 
 // Public routes
 router.post('/register', register);
@@ -61,5 +63,29 @@ router.post('/admin/login', loginAdmin);
 
 // Protected routes
 router.get('/profile', auth, getProfile);
+
+// Multer setup for profile picture uploads
+const profilePicStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '../../uploads/'));
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  }
+});
+const uploadProfilePic = multer({
+  storage: profilePicStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+}).single('profilePicture');
+
+router.post('/profile-picture', auth, uploadProfilePic, require('../controllers/authController').uploadProfilePicture);
 
 module.exports = router; 

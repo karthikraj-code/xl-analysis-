@@ -54,6 +54,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve uploads directory for profile pictures and files
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/files', require('./routes/files'));

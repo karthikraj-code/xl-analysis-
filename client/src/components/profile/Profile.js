@@ -1,15 +1,49 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { FaUser, FaEnvelope, FaUserTag, FaKey } from 'react-icons/fa';
 import { getProfile } from '../../store/slices/authSlice';
+import { toast } from 'react-hot-toast';
 
 const Profile = () => {
   const dispatch = useDispatch();
   const { user, loading, error } = useSelector((state) => state.auth);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef();
 
   useEffect(() => {
     dispatch(getProfile());
   }, [dispatch]);
+
+  const handleProfilePicChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Profile pic should be less than 10MB.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/auth/profile-picture', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Upload failed');
+      dispatch(getProfile());
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   if (loading) {
     return (
@@ -59,11 +93,21 @@ const Profile = () => {
                   <FaUser className="h-16 w-16 text-white" />
                 </div>
               )}
-              <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full p-2 shadow-lg">
-                <div className="h-6 w-6 rounded-full bg-white flex items-center justify-center">
+              <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full p-2 shadow-lg cursor-pointer">
+                <label htmlFor="profile-pic-upload" className="h-6 w-6 rounded-full bg-white flex items-center justify-center cursor-pointer">
                   <FaUser className="h-3 w-3 text-blue-600" />
-                </div>
+                  <input
+                    id="profile-pic-upload"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleProfilePicChange}
+                    ref={fileInputRef}
+                    disabled={uploading}
+                  />
+                </label>
               </div>
+              {uploading && <div className="text-xs text-blue-600 mt-2">Uploading...</div>}
             </div>
             <div className="text-center md:text-left">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">{user?.name || 'User'}</h2>

@@ -5,6 +5,7 @@ const { Chart, registerables } = require('chart.js');
 const { createCanvas } = require('canvas');
 const fs = require('fs');
 const path = require('path');
+const ChartUsage = require('../models/ChartUsage');
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -258,5 +259,34 @@ exports.downloadChart = async (req, res) => {
   } catch (error) {
     console.error('Chart generation error:', error);
     res.status(500).json({ message: 'Error generating chart', error: error.message });
+  }
+};
+
+// Track chart type usage
+exports.trackChartUsage = async (req, res) => {
+  try {
+    const { chartType } = req.body;
+    if (!chartType) return res.status(400).json({ message: 'chartType is required' });
+    await ChartUsage.create({ user: req.user._id, chartType });
+    res.json({ message: 'Chart usage tracked' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error tracking chart usage', error: err.message });
+  }
+};
+
+// Get most used chart types (admin)
+exports.getChartTypeUsage = async (req, res) => {
+  try {
+    // Only allow admin
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden: Admins only' });
+    }
+    const usage = await ChartUsage.aggregate([
+      { $group: { _id: '$chartType', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+    res.json(usage);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching chart type usage', error: err.message });
   }
 }; 

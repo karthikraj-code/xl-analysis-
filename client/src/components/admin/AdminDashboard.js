@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { FaUsers, FaFileAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { Line, Bar } from 'react-chartjs-2';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -16,6 +17,8 @@ const AdminDashboard = () => {
   const [scrollShadow, setScrollShadow] = useState(false);
   const contentRef = useRef();
   const navigate = useNavigate();
+  const [userGrowth, setUserGrowth] = useState([]);
+  const [chartTypeUsage, setChartTypeUsage] = useState([]);
 
   // Helper for auth headers
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
@@ -38,8 +41,30 @@ const AdminDashboard = () => {
     }
   };
 
+  // Fetch user registration stats for analytics
+  const fetchUserGrowth = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/admin/user-registration-stats`, authHeaders);
+      setUserGrowth(res.data);
+    } catch (err) {
+      // Optionally handle error
+    }
+  };
+
+  // Fetch chart type usage for analytics
+  const fetchChartTypeUsage = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/admin/chart-type-usage`, authHeaders);
+      setChartTypeUsage(res.data);
+    } catch (err) {
+      // Optionally handle error
+    }
+  };
+
   useEffect(() => {
     fetchAll();
+    fetchUserGrowth();
+    fetchChartTypeUsage();
     // eslint-disable-next-line
   }, []);
 
@@ -159,6 +184,73 @@ const AdminDashboard = () => {
                   </tbody>
                 </table>
               </motion.div>
+
+              {/* User Growth Analytics Graph */}
+              {userGrowth.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-8">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-6">User Growth Over Time</h3>
+                  <Line
+                    data={{
+                      labels: userGrowth.map(stat => `${stat._id.month}/${stat._id.year}`),
+                      datasets: [
+                        {
+                          label: 'Users Registered',
+                          data: userGrowth.map(stat => stat.count),
+                          fill: false,
+                          borderColor: 'rgb(75, 192, 192)',
+                          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                          tension: 0.2,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: { display: true },
+                        title: { display: false },
+                      },
+                      scales: {
+                        x: { title: { display: true, text: 'Month/Year' } },
+                        y: { title: { display: true, text: 'Users Registered' }, beginAtZero: true },
+                      },
+                    }}
+                    height={100}
+                  />
+                </div>
+              )}
+
+              {/* Most Used Chart Types Analytics Graph */}
+              {chartTypeUsage.length > 0 && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-8">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-6">Most Used Chart Types</h3>
+                  <Bar
+                    data={{
+                      labels: chartTypeUsage.map(stat => stat._id),
+                      datasets: [
+                        {
+                          label: 'Usage Count',
+                          data: chartTypeUsage.map(stat => stat.count),
+                          backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                          borderColor: 'rgb(54, 162, 235)',
+                          borderWidth: 1,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: { display: false },
+                        title: { display: false },
+                      },
+                      scales: {
+                        x: { title: { display: true, text: 'Chart Type' } },
+                        y: { title: { display: true, text: 'Usage Count' }, beginAtZero: true },
+                      },
+                    }}
+                    height={100}
+                  />
+                </div>
+              )}
             </>
           )}
         </div>

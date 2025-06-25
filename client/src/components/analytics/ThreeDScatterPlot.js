@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, forwardRef, useImperativeHandle } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Text, Grid } from '@react-three/drei';
+import { OrbitControls, Text, Grid, Box } from '@react-three/drei';
 import * as THREE from 'three';
 
 const Point = React.memo(({ position, color, label, value }) => {
@@ -45,7 +45,12 @@ const AxisLabel = ({ position, text, rotation = [0, 0, 0] }) => {
   );
 };
 
-const ThreeDScatterPlot = ({ data }) => {
+const ThreeDScatterPlot = forwardRef(({ data }, ref) => {
+  const canvasRef = React.useRef();
+  useImperativeHandle(ref, () => ({
+    getCanvas: () => canvasRef.current && canvasRef.current.gl && canvasRef.current.gl.domElement
+  }));
+
   // Memoize the data processing to prevent unnecessary recalculations
   const { points, bounds } = useMemo(() => {
     if (!data || !Array.isArray(data) || data.length === 0) {
@@ -126,7 +131,8 @@ const ThreeDScatterPlot = ({ data }) => {
   return (
     <div className="w-full h-full">
       <Canvas
-        camera={{ position: [5, 5, 5], fov: 75 }}
+        ref={canvasRef}
+        camera={{ position: [8, 8, 8], fov: 60 }}
         shadows
         dpr={[1, 2]}
         performance={{ min: 0.5 }}
@@ -141,11 +147,17 @@ const ThreeDScatterPlot = ({ data }) => {
           shadow-mapSize-height={1024}
         />
 
+        {/* 3D Box for reference */}
+        <Box args={[10, 5, 10]} position={[0, 2.5/2, 0]}>
+          <meshStandardMaterial attach="material" color="#e5e7eb" transparent opacity={0.08} />
+        </Box>
+
+        {/* XZ Grid (bottom) */}
         <Grid
           args={[10, 10]}
-          position={[0, -0.1, 0]}
-          cellSize={1}
-          cellThickness={0.5}
+          position={[0, 0, 0]}
+          cellSize={0.5}
+          cellThickness={0.3}
           cellColor="#6b7280"
           sectionSize={1}
           sectionThickness={1}
@@ -153,8 +165,60 @@ const ThreeDScatterPlot = ({ data }) => {
           fadeDistance={30}
           fadeStrength={1}
           followCamera={false}
-          infiniteGrid={true}
+          infiniteGrid={false}
         />
+        {/* XY Grid (front) */}
+        <Grid
+          args={[10, 5]}
+          position={[0, 2.5/2, 5/2]}
+          rotation={[Math.PI / 2, 0, 0]}
+          cellSize={0.5}
+          cellThickness={0.3}
+          cellColor="#6b7280"
+          sectionSize={1}
+          sectionThickness={1}
+          sectionColor="#9ca3af"
+          fadeDistance={30}
+          fadeStrength={1}
+          followCamera={false}
+          infiniteGrid={false}
+        />
+        {/* YZ Grid (side) */}
+        <Grid
+          args={[10, 5]}
+          position={[5/2, 2.5/2, 0]}
+          rotation={[0, 0, Math.PI / 2]}
+          cellSize={0.5}
+          cellThickness={0.3}
+          cellColor="#6b7280"
+          sectionSize={1}
+          sectionThickness={1}
+          sectionColor="#9ca3af"
+          fadeDistance={30}
+          fadeStrength={1}
+          followCamera={false}
+          infiniteGrid={false}
+        />
+
+        {/* Axis lines */}
+        {/* X axis (red) */}
+        <mesh>
+          <cylinderGeometry args={[0.03, 0.03, 10, 16]} />
+          <meshStandardMaterial color="#ef4444" />
+          <group position={[0, 0, 0]} rotation={[0, 0, Math.PI / 2]} />
+        </mesh>
+        {/* Y axis (green) */}
+        <mesh>
+          <cylinderGeometry args={[0.03, 0.03, 5, 16]} />
+          <meshStandardMaterial color="#22c55e" />
+          <group position={[0, 0, 0]} />
+        </mesh>
+        {/* Z axis (blue) */}
+        <mesh>
+          <cylinderGeometry args={[0.03, 0.03, 10, 16]} />
+          <meshStandardMaterial color="#3b82f6" />
+          <group position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]} />
+        </mesh>
 
         <AxisLabel 
           position={[0, -0.5, 0]} 
@@ -189,6 +253,6 @@ const ThreeDScatterPlot = ({ data }) => {
       </Canvas>
     </div>
   );
-};
+});
 
 export default React.memo(ThreeDScatterPlot); 

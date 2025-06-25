@@ -290,4 +290,22 @@ exports.loginAdmin = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error logging in as admin', error: error.message });
   }
+};
+
+// Controller to handle profile picture upload
+exports.uploadProfilePicture = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    // Update user's profilePicture field
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { profilePicture: `/uploads/${req.file.filename}` },
+      { new: true, select: '-password' }
+    );
+    res.json({ message: 'Profile picture updated', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Error uploading profile picture', error: error.message });
+  }
 }; 
