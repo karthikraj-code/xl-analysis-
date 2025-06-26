@@ -22,7 +22,8 @@ app.set('trust proxy', 1);
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? process.env.CLIENT_URL : '*',
+  // Always allow the Vercel frontend in production
+  origin: process.env.NODE_ENV === 'production' ? 'https://xl-analysis.vercel.app' : '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
