@@ -151,7 +151,7 @@ const Register = () => {
   };
 
   const handleSocialLogin = (provider) => {
-    // Implement social login logic here
+    window.location.href = `${process.env.REACT_APP_API_URL}/auth/${provider}`;
   };
 
   return (
