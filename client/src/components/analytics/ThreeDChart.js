@@ -1,5 +1,5 @@
 import React, { useMemo, forwardRef, useImperativeHandle } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Text, Grid, Box } from '@react-three/drei';
 import * as THREE from 'three';
 

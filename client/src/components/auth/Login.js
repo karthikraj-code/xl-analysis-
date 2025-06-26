@@ -226,7 +226,7 @@ const Login = () => {
   };
 
   const handleSocialLogin = (provider) => {
-    window.location.href = `${process.env.REACT_APP_API_URL}/auth/${provider}`;
+    window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/auth/${provider}`;
   };
 
   return (
